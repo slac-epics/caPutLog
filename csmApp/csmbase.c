@@ -35,9 +35,9 @@
 /*@EM("    /@   RCS-properties of the underlying source csmbase.c   @/\n")@IT*/   
     
 /* Author:              $Author: franksen $
-   check-in date:       $Date: 2004/04/01 11:52:22 $
+   check-in date:       $Date: 2004/04/01 12:19:20 $
    locker of this file: $Locker:  $
-   Revision:            $Revision: 1.3 $
+   Revision:            $Revision: 1.4 $
    State:               $State: Exp $
 */
    
@@ -146,9 +146,9 @@ Version 0.96:
 #include <string.h>
 
 #define error_msg(format, args...)\
-  errlogSevPrintf(errlogFatal, "%s: " format "\n", __FUNCTION__, ## args)
+  errlogSevPrintf(errlogFatal, format "\n", ## args)
 #define warning_msg(format, args...)\
-  errlogSevPrintf(errlogMinor, "%s: " format "\n", __FUNCTION__, ## args)
+  errlogSevPrintf(errlogMinor, format "\n", ## args)
 
 /*@ITI________________________________________________________*/
 /*                          Types                             */
@@ -274,7 +274,7 @@ static boolean init_coordinates(csm_coordinates *c, int elements)
     c->no_of_elements= elements;
     c->initial= TRUE;
     if (NULL== (c->coordinate= malloc(sizeof(csm_coordinate)*elements)))
-      { error_msg("malloc failed");
+      { error_msg("%s: malloc failed", __FUNCTION__);
         return(FALSE);
       };
     for(i=elements, co= c->coordinate; i>0; i--, (*(co++)).value= 0);
@@ -288,7 +288,7 @@ static boolean resize_coordinates(csm_coordinates *c, int elements)
     c->no_of_elements= elements;
     if (NULL== (c->coordinate= realloc(c->coordinate,
                                        sizeof(csm_coordinate)*elements)))
-      { error_msg("realloc failed");
+      { error_msg("%s: realloc failed", __FUNCTION__);
         return(FALSE);
       };
     return(TRUE);
@@ -299,7 +299,7 @@ static boolean init_matrix(double **z, int rows, int columns)
     double *zp;
     
     if (NULL== (zp= malloc((sizeof(double))*rows*columns)))
-      { error_msg("malloc failed");
+      { error_msg("%s: malloc failed", __FUNCTION__);
         return(FALSE);
       };
     *z = zp;
@@ -383,7 +383,7 @@ static int coordinate_lookup_index(csm_coordinates *coords,double x,
     *a= 0; *b=0;
     if (coords->no_of_elements<2)
       { if (coords->no_of_elements<1)
-          { error_msg("table has less than 1 element");
+          { error_msg("%s: table has less than 1 element", __FUNCTION__);
             return(-1);
            };
         coords->a_last= 0; coords->b_last= 0; coords->x_last= x; 
@@ -743,8 +743,8 @@ boolean csm_read_table(FILE *f, csm_function *func, long len, double x_start)
     
     for(i=0;(len>0) && (NULL!=fgets(line, 127, f)); len--)
       { if (2!=sscanf(line, " %lf %lf", &(xc->value), &(yc->value)))
-          { warning_msg("the following line of the data-file "
-                        "was not understood:\n%s\n", line);
+          { warning_msg("%s: the following line of the data-file "
+                        "was not understood:\n%s\n", __FUNCTION__, line);
 	    continue;
           };
 	xc->index= i; 
@@ -795,11 +795,11 @@ x2  z21  z22  z23 ...
     if (columns<1)
       return(FALSE);
     if (NULL==(buffer= malloc(sizeof(double)*(columns+1))))
-      { error_msg("malloc failed");
+      { error_msg("%s: malloc failed", __FUNCTION__);
         return(FALSE);
       };
     if (columns!= (i= strdoublescan(line, buffer, columns)))
-      { error_msg("unexpected error");
+      { error_msg("%s: unexpected error", __FUNCTION__);
         return(FALSE);
       };
       
@@ -840,8 +840,8 @@ x2  z21  z22  z23 ...
     for(i=0; (lines>0) && (NULL!=fgets(line, 1024, f)); lines--)
       { 
         if (columns+1 != strdoublescan(line, buffer, columns+1))
-          { warning_msg("the following line of the data-file "
-              "was not understood:\n%s\n", line);
+          { warning_msg("%s: the following line of the data-file "
+              "was not understood:\n%s\n", __FUNCTION__, line);
 	    continue;
 	  };  	   
 
