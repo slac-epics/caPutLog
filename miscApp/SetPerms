@@ -2,12 +2,15 @@
 #
 # Sets file permissions in an EPICS / CapFast / CVS directory tree
 #
-# Time-stamp: <97/12/18 15:02:04 lange>
-# $Id: SetPerms,v 1.11 1997/12/18 14:04:58 lange Exp $
+# Time-stamp: <12 Feb 98 11:06:06 Thomas Birke>
+# $Id: SetPerms,v 1.12 1998/02/12 10:07:16 birke Exp $
 #
 PROG=`basename $0`
 
 USAGE="usage: $PROG [directory ...]"
+
+# just beacuse USER is not set when run from a cron-job
+USER=`whoami`
 
 if [ $# = 0 ]; then
     dirs=`pwd`
