@@ -7,10 +7,8 @@ include $(TOP)/config/CONFIG_APP
 USR_CFLAGS += -D$(T_A)
 
 ifdef MCAN
-USR_CFLAGS += -DMCAN_ON -I$(MCAN)/src/include
+USR_CFLAGS += -DMCAN_ON
 endif
-
-INC += debugmsg.h
 
 PROD += initHooks.o
 
