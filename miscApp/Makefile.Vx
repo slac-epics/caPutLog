@@ -11,6 +11,7 @@ USR_CFLAGS += -DMCAN_ON
 endif
 
 PROD += initHooks.o
+PROD += mv162InitHooks.o
 
 include $(TOP)/config/RULES.Vx
 #-----------------------------------------------
