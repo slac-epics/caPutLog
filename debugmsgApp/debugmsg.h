@@ -13,12 +13,16 @@
  *
  * Author(s):	Ralph Lange
  *
- * $Revision: 1.2 $
- * $Date: 1996/10/30 10:58:49 $
+ * $Revision: 1.3 $
+ * $Date: 1996/11/22 13:29:14 $
  *
  * $Author: lange $
  *
  * $Log: debugmsg.h,v $
+ * Revision 1.3  1996/11/22 13:29:14  lange
+ * Changed definition of logMsg to be somewhat compatible with vxWorks
+ * (logLib.h).
+ *
  * Revision 1.2  1996/10/30 10:58:49  lange
  * New version (version mismatch).
  *
@@ -63,7 +67,14 @@ void prefix##SetDebug (char verb)		\
 #include <semaphore.h>
 #include <fcntl.h>
 
-extern void logMsg(char*, ...);
+				/* logLib.h *must* be declared later */
+#ifdef __INClogLibh
+#error debugmsg.h must be included before logLib.h
+#else
+#define __PROTOTYPE_5_0		/* Use logMsg (char*, ...) declaration */
+#include <logLib.h>
+#undef __PROTOTYPE_5_0
+#endif
 
 #define DBG_LOG logMsg
 
