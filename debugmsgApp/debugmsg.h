@@ -13,12 +13,15 @@
  *
  * Author(s):	Ralph Lange
  *
- * $Revision: 1.3 $
- * $Date: 1996/11/22 13:29:14 $
+ * $Revision: 1.4 $
+ * $Date: 1996/11/22 13:49:08 $
  *
  * $Author: lange $
  *
  * $Log: debugmsg.h,v $
+ * Revision 1.4  1996/11/22 13:49:08  lange
+ * Small changes regarding DBG_INIT (now done in <mod>SetDebug).
+ *
  * Revision 1.3  1996/11/22 13:29:14  lange
  * Changed definition of logMsg to be somewhat compatible with vxWorks
  * (logLib.h).
@@ -56,6 +59,7 @@ extern void prefix##SetDebug (char);
 #define DBG_IMPLEMENT(prefix)			\
 void prefix##SetDebug (char verb)		\
 {						\
+   DBG_INIT;					\
    dbg_level = verb;				\
    return;					\
 }
@@ -90,7 +94,7 @@ static char dbg_level       = -1;		\
 static char dbg_int_context = FALSE;
 
 #define DBG_INIT				\
-dbg_lock = sem_open("dbg_lock", O_CREAT, 0, 1)
+if (dbg_lock == NULL) dbg_lock = sem_open("dbg_lock", O_CREAT, 0, 1)
 
 #define DBG_ENTER_INT_CONTEXT			\
 dbg_int_context = TRUE
