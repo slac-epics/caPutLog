@@ -35,9 +35,9 @@
 /*@EM("    /@   RCS-properties of the underlying source csmbase.c   @/\n")@IT*/   
     
 /* Author:              $Author: pfeiffer $
-   check-in date:       $Date: 2004/04/27 10:15:02 $
+   check-in date:       $Date: 2004/04/27 10:22:54 $
    locker of this file: $Locker:  $
-   Revision:            $Revision: 1.7 $
+   Revision:            $Revision: 1.8 $
    State:               $State: Exp $
 */
    
@@ -1166,6 +1166,7 @@ csm_bool csm_read_1d_table(char *filename, csm_function *fu)
     csm_coordinate *xc, *yc;
     int len;
     FILE *f;
+    char dummy;
     
     if (NULL==(f=fopen(filename,"r"))) /* vxworks doesn't accept "rt" */
       { DBG_MSG_PRINTF2("error in IDCP:csm_read_xytable line %d,\n" \
@@ -1206,7 +1207,8 @@ csm_bool csm_read_1d_table(char *filename, csm_function *fu)
     yc= (ft->y).coordinate;
     
     for(i=0;(len>0) && (NULL!=fgets(line, 127, f)); len--)
-      { if (2!=sscanf(line, " %lf %lf", &(xc->value), &(yc->value)))
+      { if (2!=sscanf(line, " %lf %lf %c", 
+                      &(xc->value), &(yc->value), &dummy))
           { DBG_MSG_PRINTF4("warning[%s:%d]: the following line of the "
 	           "data-file was not understood:\n%s\n", 
 		   __FILE__,__LINE__,line);
