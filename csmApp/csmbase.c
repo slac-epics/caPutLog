@@ -35,9 +35,9 @@
 /*@EM("    /@   RCS-properties of the underlying source csmbase.c   @/\n")@IT*/   
     
 /* Author:              $Author: pfeiffer $
-   check-in date:       $Date: 2004/04/27 10:38:08 $
+   check-in date:       $Date: 2004/04/27 10:50:06 $
    locker of this file: $Locker:  $
-   Revision:            $Revision: 1.9 $
+   Revision:            $Revision: 1.10 $
    State:               $State: Exp $
 */
    
@@ -1162,6 +1162,7 @@ csm_bool csm_read_1d_table(char *filename, csm_function *fu)
   { char line[128];
     long pos;
     long i;
+    long errcount;
     csm_Function *func= (csm_Function *)fu;
     csm_1d_functiontable *ft= &(func->f.tf_1);
     csm_coordinate *xc, *yc;
@@ -1207,18 +1208,34 @@ csm_bool csm_read_1d_table(char *filename, csm_function *fu)
     xc= (ft->x).coordinate;
     yc= (ft->y).coordinate;
     
-    for(i=0;(len>0) && (NULL!=fgets(line, 127, f)); len--)
+    for(errcount=0, i=0;(len>0) && (NULL!=fgets(line, 127, f)); len--)
       { if (2!=sscanf(line, " %lf %lf %c", 
                       &(xc->value), &(yc->value), &dummy))
           { DBG_MSG_PRINTF4("warning[%s:%d]: the following line of the "
 	           "data-file was not understood:\n%s\n", 
 		   __FILE__,__LINE__,line);
-	    continue;
+	    if (++errcount<4)
+	      continue; 
+	    fclose(f);                
+	    reinit_function(fu);
+            func->on_hold= CSM_FALSE;
+            DBG_MSG_PRINTF4("error[%s:%d]: too many errors in file\n", 
+			  __FILE__,__LINE__);
+            return(CSM_FALSE); 
           };
 	xc->index= i; 
 	yc->index= i;  
         i++, xc++,yc++;
       };
+    if (i<=0)
+      { fclose(f);                
+	reinit_function(fu);
+        func->on_hold= CSM_FALSE;
+        DBG_MSG_PRINTF4("error[%s:%d]: no data was found at all\n", 
+		      __FILE__,__LINE__);
+        return(CSM_FALSE); 
+      };
+      
     if (!resize_coordinates(&(ft->x), i))
       { fclose(f);                
 	reinit_function(fu);
@@ -1264,7 +1281,7 @@ x2  z21  z22  z23 ...
 */
   { char line[1024];
     long pos;
-    long i,j,lines;
+    long i,j,lines,errcount;
     double *buffer;
     double *zptr;
     csm_Function *func= (csm_Function *)fu;
@@ -1359,13 +1376,20 @@ x2  z21  z22  z23 ...
 
     zptr= ft->z;
 
-    for(i=0; (lines>0) && (NULL!=fgets(line, 1024, f)); lines--)
+    for(errcount=0, i=0; (lines>0) && (NULL!=fgets(line, 1024, f)); lines--)
       { 
         if (columns+1 != strdoublescan(line, buffer, columns+1))
           { DBG_MSG_PRINTF4("warning[%s:%d]: the following line of the "
 	                    "data-file was not understood:\n%s\n", 
 			    __FILE__,__LINE__,line);
-	    continue;
+	    if (++errcount<4)
+	      continue; 
+	    fclose(f);                
+	    reinit_function(fu);
+            func->on_hold= CSM_FALSE;
+            DBG_MSG_PRINTF4("error[%s:%d]: too many errors in file\n", 
+			  __FILE__,__LINE__);
+            return(CSM_FALSE); 
 	  };  	   
 
         xc->value= buffer[0];
@@ -1378,6 +1402,16 @@ x2  z21  z22  z23 ...
 	i++, xc++;  
       };
     
+    if (i<=0)
+      { free(buffer);
+      	reinit_function(fu);
+        fclose(f);                
+        func->on_hold= CSM_FALSE;
+        DBG_MSG_PRINTF4("error[%s:%d]: no data was found at all\n", 
+		      __FILE__,__LINE__);
+        return(CSM_FALSE); 
+      };
+
     rows= i;
     if (!resize_coordinates(&(ft->x), rows))
       { free(buffer);
