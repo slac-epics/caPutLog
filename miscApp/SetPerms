@@ -3,7 +3,7 @@
 # Sets file permissions in an EPICS directory tree
 #
 # Time-stamp: <97/02/07 20:39:57 lange>
-# $rcsid$
+# $Id: SetPerms,v 1.2 1997/02/11 19:01:41 lange Exp $
 #
 
 # Exit if not in .../base or .../extensions or .../csr/capfast (I *love* shell programming)
