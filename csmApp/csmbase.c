@@ -35,9 +35,9 @@
 /*@EM("    /@   RCS-properties of the underlying source csmbase.c   @/\n")@IT*/   
     
 /* Author:              $Author: pfeiffer $
-   check-in date:       $Date: 2004/04/27 10:22:54 $
+   check-in date:       $Date: 2004/04/27 10:38:08 $
    locker of this file: $Locker:  $
-   Revision:            $Revision: 1.8 $
+   Revision:            $Revision: 1.9 $
    State:               $State: Exp $
 */
    
@@ -171,13 +171,13 @@ Version 0.96:
 #else
 
 /*! \internal \brief compability macro, needed when DBG is not used */
-#define DBG_MSG_PRINTF2(f,x) logMsg(f,x,0,0,0,0,0)
+#define DBG_MSG_PRINTF2(f,x) errlogPrintf(f,x)
 
 /*! \internal \brief compability macro, needed when DBG is not used */
-#define DBG_MSG_PRINTF3(f,x,y) logMsg(f,x,y,0,0,0,0)
+#define DBG_MSG_PRINTF3(f,x,y) errlogPrintf(f,x,y)
 
 /*! \internal \brief compability macro, needed when DBG is not used */
-#define DBG_MSG_PRINTF4(f,x,y,z) logMsg(f,x,y,z,0,0,0)
+#define DBG_MSG_PRINTF4(f,x,y,z) errlogPrintf(f,x,y,z)
 
 #endif
 
@@ -202,7 +202,8 @@ Version 0.96:
 #if USE_DBG
 #include <dbg.h>     
 #else
-#include <logLib.h>     
+/* #include <logLib.h> */
+#include <errlog.h> /* epics error printf */    
 #endif
 
 #include <stdlib.h>
