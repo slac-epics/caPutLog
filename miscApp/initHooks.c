@@ -122,10 +122,6 @@ int	callNumber;
 	case INITHOOKafterScanInit :
 	    break;
 	case INITHOOKafterInterruptAccept :
-	    break;
-	case INITHOOKafterInitialProcess :
-	    break;
-	case INITHOOKatEnd :
 #ifdef MCAN_ON
           /*Start reader and timer if any protocol is used by one or more elements*/
 	   for (i = 0; i < MCAN_PROT; i++) {
@@ -141,6 +137,10 @@ int	callNumber;
 	      }
 	   }
 #endif
+	    break;
+	case INITHOOKafterInitialProcess :
+	    break;
+	case INITHOOKatEnd :
 	    break;
 	default:
 	    break;
