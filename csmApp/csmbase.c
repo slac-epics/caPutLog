@@ -35,9 +35,9 @@
 /*@EM("    /@   RCS-properties of the underlying source csmbase.c   @/\n")@IT*/   
     
 /* Author:              $Author: pfeiffer $
-   check-in date:       $Date: 2004/06/04 11:37:36 $
+   check-in date:       $Date: 2004/06/04 11:41:38 $
    locker of this file: $Locker:  $
-   Revision:            $Revision: 1.13 $
+   Revision:            $Revision: 1.14 $
    State:               $State: Exp $
 */
    
@@ -178,6 +178,9 @@ Version 0.96:
 
 /*! \internal \brief compability macro, needed when DBG is not used */
 #define DBG_MSG_PRINTF4(f,x,y,z) errlogPrintf(f,x,y,z)
+
+/*! \internal \brief compability macro, needed when DBG is not used */
+#define DBG_MSG_PRINTF5(f,x,y,z,q) errlogPrintf(f,x,y,z,q)
 
 #endif
 
@@ -1227,7 +1230,7 @@ csm_bool csm_read_1d_table(char *filename, csm_function *fu)
           continue;
         if (2!=sscanf(line, " %lf %lf %c", 
                       &(xc->value), &(yc->value), &dummy))
-          { DBG_MSG_PRINTF4("warning[%s:%d]: the following line of the "
+          { DBG_MSG_PRINTF5("warning[%s:%d]: the following line of the "
 	           "data-file (%s) was not understood:\n%s\n", 
 		   __FILE__,__LINE__,filename,line);
 	    if (++errcount<4)
@@ -1397,7 +1400,7 @@ x2  z21  z22  z23 ...
         if (str_empty_or_comment(line))
           continue;
         if (columns+1 != strdoublescan(line, buffer, columns+1))
-          { DBG_MSG_PRINTF4("warning[%s:%d]: the following line of the "
+          { DBG_MSG_PRINTF5("warning[%s:%d]: the following line of the "
 	                    "data-file (%s) was not understood:\n%s\n", 
 			    __FILE__,__LINE__,filename,line);
 	    if (++errcount<4)
