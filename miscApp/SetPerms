@@ -2,8 +2,8 @@
 #
 # Sets file permissions in an EPICS directory tree
 #
-# Time-stamp: <97/04/11 23:52:05 lange>
-# $Id: SetPerms,v 1.4 1997/07/04 11:10:54 lange Exp $
+# Time-stamp: <97/09/24 14:55:28 lange>
+# $Id: SetPerms,v 1.5 1997/09/24 12:58:04 lange Exp $
 #
 
 # Exit if not in .../base or .../extensions or .../csr/capfast (I *love* shell programming)
@@ -23,7 +23,7 @@ case `pwd` in
 
 	echo Setting all directories to mode rwxrwxr-x ...
 
-	chmod u=rwx,g=rwx,o=rx `find . -type d -user $USER`
+	find . -type d -user $USER | xargs chmod u=rwx,g=rwx,o=rx
 
 	;;
 
@@ -41,7 +41,7 @@ case `pwd` in
 
 	echo Setting all directories to mode rwxrwxr-x ...
 
-	chmod u=rwx,g=rwx,o=rx `find . -type d -user $USER`
+	find . -type d -user $USER | xargs chmod u=rwx,g=rwx,o=rx 
 
 	;;
 
@@ -60,8 +60,8 @@ case `pwd` in
 	echo Setting all directories and executables to group epima and mode rwxrwxr-x ...
 		       
 	files=`find . -user $USER -and \( -type d -or -type f -perm +111 \)`
-	chmod u=rwx,g=rwx,o=rx $files
-	chgrp epima $files
+	echo $files | xargs chmod u=rwx,g=rwx,o=rx
+	echo $files | xargs chgrp epima
 	unset files
 		       
 # Make config files world readable
