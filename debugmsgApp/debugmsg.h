@@ -13,12 +13,15 @@
  *
  * Author(s):	Ralph Lange
  *
- * $Revision: 1.7 $
- * $Date: 1997/02/11 18:59:23 $
+ * $Revision: 1.8 $
+ * $Date: 1998/06/04 10:24:12 $
  *
  * $Author: lange $
  *
  * $Log: debugmsg.h,v $
+ * Revision 1.8  1998/06/04 10:24:12  lange
+ * PC Bugfixes
+ *
  * Revision 1.7  1997/02/11 18:59:23  lange
  * Beautified.
  *
@@ -41,7 +44,7 @@
  * Revision 1.1  1996/06/24 18:30:39  lange
  * New debug macros.
  *
- * Copyright (c) 1996, 1997
+ * Copyright (c) 1996, 1997, 1998
  *			Berliner Elektronenspeicherring-Gesellschaft
  *			      fuer Synchrotronstrahlung m.b.H.,
  *				     Berlin, Germany
@@ -67,7 +70,7 @@ extern void prefix##SetDebug (char);
 void prefix##SetDebug (char verb)						\
 {										\
 static char									\
-rcsid[] = "@(#)DEBUG: $Id: debugmsg.h,v 1.7 1997/02/11 18:59:23 lange Exp $";	\
+rcsid[] = "@(#)DEBUG: $Id: debugmsg.h,v 1.8 1998/06/04 10:24:12 lange Exp $";	\
 										\
    DBG_INIT;									\
    dbg_level = verb;								\
@@ -138,19 +141,8 @@ dbg_int_context = FALSE
 #include <target.h>
 
 #define DBG_LOG printf
-
-#define DBG(verb, string) {			\
-   if (verb <= dbg_level)			\
-      DBG_LOG (__FILE__ ":%d: %s\r\n",		\
-	     __LINE__, string);			\
-}
-
-#define PRF(verb, x) {				\
-   if (verb <= dbg_level) {			\
-      DBG_LOG (__FILE__ ":%d: ", __LINE__);	\
-      DBG_LOG x; DBG_LOG ("\r");		\
-   }						\
-}
+#define DBG_LOG_MUTEX_ENTRY
+#define DBG_LOG_MUTEX_EXIT
 
 #define DBG_DECLARE				\
 static char dbg_level       = -1;
