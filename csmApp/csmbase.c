@@ -9,9 +9,9 @@
 /*____________________________________________________________*/
 /* project: IDCP                                              */
 /* module: CSM-BASE                                           */
-/* version-number of module: 0.96                             */
+/* version-number of module: 1.0                              */
 /* author: Goetz Pfeiffer                                     */
-/* last modification date: 2002-03-05                         */
+/* last modification date: 2004-04-15                         */
 /* status: beta-test                                          */
 /*____________________________________________________________*/
 
@@ -34,10 +34,10 @@
 
 /*@EM("    /@   RCS-properties of the underlying source csmbase.c   @/\n")@IT*/   
     
-/* Author:              $Author: franksen $
-   check-in date:       $Date: 2004/04/01 12:19:20 $
+/* Author:              $Author: pfeiffer $
+   check-in date:       $Date: 2004/04/22 12:09:30 $
    locker of this file: $Locker:  $
-   Revision:            $Revision: 1.4 $
+   Revision:            $Revision: 1.5 $
    State:               $State: Exp $
 */
    
@@ -97,15 +97,25 @@ Version 0.96:
   Date: 2002-03-05
   Errors in the header-file generation were fixed, some 
   left-overs from previous debugging were removed
+  
+  Date: 2004-04-05
+  in csm_read_table a superfluous parameter was removed
 */
 
     /*----------------------------------------------------*/
     /*		        General Comments                  */
     /*----------------------------------------------------*/
     
-/* This is the calculation-support module. It supports the conversion from
-   position-increments to gap distances and from gap-distances to 
-   energy-values. The calculation-support module is a part of IDCP. */
+/*! \file csmbase.c
+    \brief implement function table
+    \author Goetz Pfeiffer (pfeiffer\@mail.bessy.de)
+    \version 1.0
+    
+   This module implements one and two dimensional function tables.
+   The tables can be specified by simple ascii files. The points 
+   defined in the file don't have to be in the same distance.
+*/
+
 
 /*@ITI________________________________________________________*/
 /*                      general Defines                       */
@@ -113,126 +123,212 @@ Version 0.96:
 
 /*@EM("\n#ifndef __CSMBASE_H\n#define __CSMBASE_H\n") */
 
+/*! \brief needed for POSIX compability */
 #define _INCLUDE_POSIX_SOURCE
+
+/*! \brief use DBG module ? */
+#define USE_DBG 0
+
+/*! \brief use epics printf ? */
+#define USE_EPICS_DBG 1
+
+/* the following macros affect the debug (dbg) module: */
+
+#if USE_DBG
+
+/*! \brief compile DBG assertions */
+#define DBG_ASRT_COMP 0 
+
+/*! \brief compile DBG debug messages */
+#define DBG_MSG_COMP 0 
+
+/*! \brief compile DBG trace messages */
+#define DBG_TRC_COMP  0
+
+/*! \brief use local switch-variables for the dbg module */
+#define DBG_LOCAL_COMP 1
+
+/*! \brief use async. I/O with message passing in DBG module*/
+#define DBG_ASYNC_COMP 0
 
 /* the following defines are for sci-debugging, they do not influence
    any header-files but are placed here since they are usually changed 
    together with the above macros.*/
    
+/*! \brief for debug-outputs, "stdout" means console */
 #define CSMBASE_OUT_FILE "stdout"
-/* file for debug-outputs */
-#define CSMBASE_TRC_LEVEL 0
-/* standard trace-level */ 
-/* level 6: dense traces for debugging
-   level 5: enter/exit tracing */
-#define CSMBASE_FLUSHMODE 1
-/* 0, 1 and 2 are allowed */
 
+/*! \brief csm trace level
+
+  \li level 6: dense traces for debugging
+  \li level 5: enter/exit tracing
+*/
+#define CSMBASE_TRC_LEVEL 0
+
+/*! \brief flushmode, 0, 1 and 2 are allowed */
+#define CSMBASE_FLUSHMODE 1
+
+#else
+
+/*! \internal \brief compability macro, needed when DBG is not used */
+#define DBG_MSG_PRINTF2(f,x) logMsg(f,x,0,0,0,0,0)
+/*! \internal \brief compability macro, needed when DBG is not used */
+#define DBG_MSG_PRINTF3(f,x,y) logMsg(f,x,y,0,0,0,0)
+/*! \internal \brief compability macro, needed when DBG is not used */
+#define DBG_MSG_PRINTF4(f,x,y,z) logMsg(f,x,y,z,0,0,0)
+
+#endif
+
+/*! \brief for type csm_bool */
+#define CSM_TRUE 1
+
+/*! \brief for type csm_bool */
+#define CSM_FALSE 0
 
 /*____________________________________________________________*/
 /*			 Include-Files			      */
 /*____________________________________________________________*/
 
-#ifdef B_VXWORKS
-#include <vxWorks.h>
-#endif
+/* #include <basic.h> */
 
-/* epics include files... */
-#include <errlog.h>
-/* ... until here ! */
+
+
+#include <vxWorks.h>
+#include <semaphore.h> 
+
+
+#if USE_DBG
+#include <dbg.h>     
+#else
+#include <logLib.h>     
+#endif
 
 #include <stdlib.h>
 #include <stdio.h>    /*@IL*/
 #include <string.h>
-
-#define error_msg(format, args...)\
-  errlogSevPrintf(errlogFatal, format "\n", ## args)
-#define warning_msg(format, args...)\
-  errlogSevPrintf(errlogMinor, format "\n", ## args)
 
 /*@ITI________________________________________________________*/
 /*                          Types                             */
 /*@ET_________________________________________________________*/
 
       /*................................................*/
-      /*@IL           the coordinate type               */
+      /*@IL        the csm_bool type (public)           */
       /*................................................*/
 
-        /*\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
-        /*                  public                    */
-        /*@IT\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
+/*! \brief typedef-struct: the csm_bool data type */
 
-#ifdef boolean
-#error "Oops, boolean is already defined as a macro!"
-#endif
+typedef int csm_bool; /*@IL*/
 
-typedef int boolean;
+      /*................................................*/
+      /*          the coordinate type (private)         */
+      /*................................................*/
 
+/*! \internal \brief typedef-struct: a single coordinate value */ 
 typedef struct
-  { double value;
-    int    index;
+  { 
+    double value; /*!< the floating point value of the coordinate */
+    int    index; /*!< the index-number within this list of coordinates */
   } csm_coordinate;
   
+/*! \internal \brief typedef-struct: a list of coordinates */ 
 typedef struct
-  { csm_coordinate *coordinate;
+  { csm_coordinate *coordinate;  /*!< pointer to coordinate array */
     int            no_of_elements;
-    int            a_last;       /* last left index */
-    int            b_last;       /* last right index */
-    int		   ret_last;     /* last return-val. of lookup function */
-    double         x_last;       /* last x that was looked up */
-    boolean        initial;      /* TRUE after initialization */
+                                 /*!< number of elements in the coordinate 
+				      array */
+    int            a_last;       /*!< last left index */
+    int            b_last;       /*!< last right index */
+    int		   ret_last;     /*!< last return-code of lookup function */
+    double         x_last;       /*!< last x that was looked up */
   } csm_coordinates;   
 
-      /*@ETI............................................*/
-      /*@IL         the table-function type             */
+/*! \endif */
+
+
+      /*................................................*/
+      /*        the linear function type (private)      */
       /*................................................*/
 
-        /*\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
-        /*                  public                    */
-        /*@IT\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
-        
+/*! \internal \brief typedef-struct: a linear function y = a + b*x */
 typedef struct
-  { csm_coordinates x;
-    csm_coordinates y;
+  { double a;  
+    double b; 
+  } csm_linear_function;
+
+      /*................................................*/
+      /*           the 1d table type (private)          */
+      /*................................................*/
+
+/*! \internal \brief typedef-struct: one-dimenstional function table 
+
+  This is a list of x-y pairs that define a one-dimensional 
+  function. The function can be inverted, if it is monotone.
+*/ 
+typedef struct
+  { csm_coordinates x;    /*!< list of x-coordinates */ 
+    csm_coordinates y;    /*!< list of y-coordinates */ 
   } csm_1d_functiontable; 
   
+      /*................................................*/
+      /*          the 2d table type (private)           */
+      /*................................................*/
+
+/*! \internal \brief typedef-struct: two-dimenstional function table 
+
+  This is a list of x-y pairs and corresponding z-values that 
+  define a two-dimensional function table. The function cannot be inverted.
+*/ 
 typedef struct
-  { csm_coordinates x;
-    csm_coordinates y;
-    double          *z;
+  { csm_coordinates x;   /*!< list of x-coordinates */ 
+    csm_coordinates y;   /*!< list of y-coordinates */ 
+    double          *z;  /*!< list of z-values (function values) */ 
   } csm_2d_functiontable; 
   
-      /*@ETI............................................*/
-      /*@IL       the linconv-parameter type            */
+      /*................................................*/
+      /*           the function-type (private)          */
       /*................................................*/
 
-        /*\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
-        /*                  public                    */
-        /*@IT\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
+/*! \internal \brief typedef-enum: types of functions known in this module */
+typedef enum { CSM_NOTHING,  /*!< kind of NULL value */
+               CSM_LINEAR,   /*!< linear y=a+b*x */
+               CSM_1D_TABLE, /*!< one-dimensional function table */
+	       CSM_2D_TABLE  /*!< two-dimensional function table */
+	     } csm_func_type;        
 
-typedef struct
-  { double a;
-    double b; /* y = a + b*x */
-  } csm_linear_function;
-  
-      /*@ETI............................................*/
-      /*@IL            the function-type                */
-      /*................................................*/
-
-        /*\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
-        /*                  public                    */
-        /*@IT\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
-
-typedef enum { CSM_NOTHING, CSM_LINEAR, 
-              CSM_1D_TABLE, CSM_2D_TABLE} csm_func_type;        
-
+/*! \internal \brief typedef-struct: compound type for functions */
 typedef struct 
-  { csm_func_type type;
-    union { csm_linear_function    lf; 
-            csm_1d_functiontable   tf_1; /* forward function y(x) */
-            csm_2d_functiontable   tf_2; /* xy */
-	  } f;  
-  } csm_function;
+  { SEM_ID   semaphore;
+    double   last;
+    csm_bool on_hold; 
+    csm_func_type type;   /*!< the type of the function */
+    
+    union { csm_linear_function    lf;   /*!< linear function */
+            csm_1d_functiontable   tf_1; /*!< 1d function table */
+            csm_2d_functiontable   tf_2; /*!< 2d function table */
+	  } f;            /*!< union that holds the actual data */
+  } csm_Function;
+
+      /*................................................*/
+      /*@IL       the function-object (public)          */
+      /*................................................*/
+
+/*! \brief typedef-struct: the abstract csm function object */
+/*@IT*/
+typedef struct {                        
+                 char dummy; 
+               } csm_function;
+
+/*@ET*/
+
+/*____________________________________________________________*/
+/*			  Variables			      */
+/*____________________________________________________________*/
+  
+      /*................................................*/
+      /*           initialization (private)             */
+      /*................................................*/
+
+static csm_bool initialized= CSM_FALSE;
 
 /*____________________________________________________________*/
 /*                        Functions                           */
@@ -240,81 +336,169 @@ typedef struct
 
 
     /*----------------------------------------------------*/
-    /*                 linear conversion                  */
+    /*             debug - managment (private)            */
     /*----------------------------------------------------*/
 
-        /*/////////////////////////////////////////// */
-        /*                  private                   */
-        /*/////////////////////////////////////////// */
+#if USE_DBG
+/*! \internal \brief initialize the DBG module [static]
 
-static double linear_get_y(csm_linear_function *p, double x)
-  { return( (p->a) + (p->b)*x ); }
+  This internal function is called by csmbase_init
+*/
 
-static double linear_get_x(csm_linear_function *p, double y)
-  { return( (y - (p->a))/(p->b) ); }
+static void csm_dbg_init(void)
+  { static csm_bool csmbase_init= CSM_FALSE;
 
-static double linear_delta_get_y(csm_linear_function *p, double x)
-  { return( (p->b)*x ); }
+    if (csmbase_init)
+      return;
+    csmbase_init= CSM_TRUE;
+    /* initialize the debug (dbg) module: use stdout for error-output */
+    DBG_SET_OUT(CSMBASE_OUT_FILE);
+    DBG_TRC_LEVEL= CSMBASE_TRC_LEVEL;
+                           /* level 6: dense traces for debugging
+                              level 5: enter/exit tracing
+                              level 2: output less severe errors and warnings
+                              level 1: output of severe errors
+                              level 0: no output */
+    DBG_FLUSHMODE(CSMBASE_FLUSHMODE);
+  }
+  
+#endif
 
-static double linear_delta_get_x(csm_linear_function *p, double y)
-  { return( y/(p->b) ); }
- 
     /*----------------------------------------------------*/
-    /*                  table-handling                    */
+    /*        utilities for csm-coordinates (private)     */
     /*----------------------------------------------------*/
 
-        /*::::::::::::::::::::::::::::::::::::::::::::*/
         /*              initialization                */
-        /*::::::::::::::::::::::::::::::::::::::::::::*/
 
-static boolean init_coordinates(csm_coordinates *c, int elements)
+/*! \internal \brief initialize a csm_coordinates structure [static]
+
+  This function initializes a csm_coordinates structure. This function 
+  should be called immediately after a variable of the type 
+  csm_coordinates was created.
+  \param c pointer to the csm_coordinates array
+*/
+static void init_coordinates(csm_coordinates *c)
+  { 
+    c->a_last=-1;
+    c->b_last=-1;
+    c->x_last=-1;
+    c->ret_last=-1;
+    c->coordinate= NULL;
+    c->no_of_elements=0;
+  }
+
+/*! \internal \brief initialize a csm_coordinates structure [static]
+
+  This function allocates memory for a 
+  csm_coordinates structure. 
+  \param c pointer to the csm_coordinates structure
+  \param elements number of elements in the structure
+  \return returns CSM_FALSE in case of an error, CSM_TRUE otherwise
+*/
+static csm_bool alloc_coordinates(csm_coordinates *c, int elements)
   { int i;
     csm_coordinate *co;
   
-    c->no_of_elements= elements;
-    c->initial= TRUE;
-    if (NULL== (c->coordinate= malloc(sizeof(csm_coordinate)*elements)))
-      { error_msg("%s: malloc failed", __FUNCTION__);
-        return(FALSE);
+    if (c->no_of_elements=0) /* 1st time memory allocation */
+      c->coordinate= malloc(sizeof(csm_coordinate)*elements);
+    else  
+      c->coordinate= realloc(c->coordinate,
+                             sizeof(csm_coordinate)*elements);
+			     
+    if (c->coordinate==NULL) /* allocation error */
+      { DBG_MSG_PRINTF2("error in IDCP:csm:alloc_coordinates line %d,\n"
+                	"allocation failed!\n", __LINE__);
+	init_coordinates(c);
+	return(CSM_FALSE);
       };
-    for(i=elements, co= c->coordinate; i>0; i--, (*(co++)).value= 0);
-    return(TRUE);
+
+    for(i=c->no_of_elements, co= (c->coordinate + c->no_of_elements); 
+        i<elements; 
+	i++, co++)
+      { co->value=0;
+	co->index=i;
+      };
+	  
+    c->no_of_elements= elements;
+    return(CSM_TRUE);
   }    
 
-static boolean resize_coordinates(csm_coordinates *c, int elements)
+/*! \internal \brief resize a csm_coordinates structure [static]
+
+  This function resizes a csm_coordinates structure. This means that
+  the size of allocated memory is adapted to a new, different number
+  of elements. Note that the existing data is not changed. If additional
+  memory is allocated, it is initialized with zeroes. 
+  \param c pointer to the csm_coordinates structure
+  \param elements new number of elements in the structure
+  \return returns CSM_FALSE in case of an error, CSM_TRUE otherwise
+*/
+static csm_bool resize_coordinates(csm_coordinates *c, int elements)
   { if (elements==c->no_of_elements)
-      return(TRUE);
+      return(CSM_TRUE);
     
     c->no_of_elements= elements;
     if (NULL== (c->coordinate= realloc(c->coordinate,
                                        sizeof(csm_coordinate)*elements)))
-      { error_msg("%s: realloc failed", __FUNCTION__);
-        return(FALSE);
+      { DBG_MSG_PRINTF2("error in IDCP:csm:resize_coordinates line %d,\n" \
+                        "realloc failed!\n", __LINE__);
+        return(CSM_FALSE);
       };
-    return(TRUE);
+    return(CSM_TRUE);
   }    
 
-static boolean init_matrix(double **z, int rows, int columns)
+/*! \internal 
+    \brief re-initialize a csm_coordinates structure [static]
+
+  This re-initializes a csm_coordinates structure. This function
+  is similar to init_coordinates, but already allocated memory is
+  freed before the structure is filled with it's default values.   
+  \param c pointer to the csm_coordinates array
+*/
+static void reinit_coordinates(csm_coordinates *c)
+  { if (c->no_of_elements==0)
+      return;
+    
+    free(c->coordinate);
+    init_coordinates(c);
+  }    
+
+/*! \internal \brief initialize a matrix of double values [static]
+
+  This function allocates an array of doubles in a way that it
+  has enough room to hold all values of a rows*columns matrix.
+  \param z address of pointer to array of double-numbers (output)
+  \param rows number of rows 
+  \param columns number of columns 
+  \return returns CSM_FALSE in case of an error, CSM_TRUE otherwise
+*/
+static csm_bool init_matrix(double **z, int rows, int columns)
   { int i;
     double *zp;
     
     if (NULL== (zp= malloc((sizeof(double))*rows*columns)))
-      { error_msg("%s: malloc failed", __FUNCTION__);
-        return(FALSE);
+      { DBG_MSG_PRINTF2("error in IDCP:csm:init_matrix line %d,\n" \
+                        "malloc failed!\n", __LINE__);
+        return(CSM_FALSE);
       };
     *z = zp;
     for (i= rows*columns; i>0; i--, *(zp++)=0);
-    return(TRUE);
+    return(CSM_TRUE);
   }  
 
-        /*::::::::::::::::::::::::::::::::::::::::::::*/
         /*            x-compare for qsort             */
-        /*::::::::::::::::::::::::::::::::::::::::::::*/
 
-        /*/////////////////////////////////////////// */
-        /*                  private                   */
-        /*/////////////////////////////////////////// */
+/*! \internal 
+    \brief compare two values within a csm_coordinate structure [static]
 
+  This function compares two values within a cms_coordinate structure.
+  It is needed in order to apply quicksort.
+  \param t1 this is the pointer to the first value. It should be of the
+            type csm_coordinate*.
+  \param t2 this is the pointer to the second value. It should be of the
+            type csm_coordinate*.
+  \return returns -1 if *t1 < *t2, 0 if *t1 = *t2, 1 if *t1 > *t2
+*/
 static int coordinate_cmp(const void *t1, const void *t2)
   { double x1= ((csm_coordinate *)(t1))->value;
     double x2= ((csm_coordinate *)(t2))->value;
@@ -326,13 +510,7 @@ static int coordinate_cmp(const void *t1, const void *t2)
     return(0);
   }
 
-        /*::::::::::::::::::::::::::::::::::::::::::::*/
         /*              coordinate-sort               */
-        /*::::::::::::::::::::::::::::::::::::::::::::*/
-
-        /*/////////////////////////////////////////// */
-        /*                  private                   */
-        /*/////////////////////////////////////////// */
 
 static void coordinate_sort( csm_coordinates *coords)
   {
@@ -341,7 +519,7 @@ static void coordinate_sort( csm_coordinates *coords)
   }
 
 static void coordinate_update_backlinks( csm_coordinates *coords1,
-				        csm_coordinates *coords2)
+				         csm_coordinates *coords2)
   { int i,l;
     csm_coordinate *c,*d;
     
@@ -350,16 +528,10 @@ static void coordinate_update_backlinks( csm_coordinates *coords1,
       { d[c->index].index = i; }; 
   }
 
-        /*::::::::::::::::::::::::::::::::::::::::::::*/
         /*      lookup an index in coordinates        */
-        /*::::::::::::::::::::::::::::::::::::::::::::*/
-
-        /*/////////////////////////////////////////// */
-        /*                  private                   */
-        /*/////////////////////////////////////////// */
 
 static int coordinate_lookup_index(csm_coordinates *coords,double x, 
-				  int *a, int *b)
+				   int *a, int *b)
   /* 2: x was found, it is returned in a
      1: x was not found, but a and b define the closest interval around x
      0: x was not found at it is outside the closest interval a and b
@@ -370,9 +542,8 @@ static int coordinate_lookup_index(csm_coordinates *coords,double x,
     double xt;
     csm_coordinate *c= coords->coordinate;
     
-    if (coords->initial)
-      { coords->initial= FALSE;
-        coords->a_last=0;
+    if (coords->a_last==-1)
+      { coords->a_last=0;
         coords->b_last=coords->no_of_elements-1;
       }	
     else
@@ -383,7 +554,9 @@ static int coordinate_lookup_index(csm_coordinates *coords,double x,
     *a= 0; *b=0;
     if (coords->no_of_elements<2)
       { if (coords->no_of_elements<1)
-          { error_msg("%s: table has less than 1 element", __FUNCTION__);
+          { 
+            DBG_MSG_PRINTF2("error in IDCP:csm:coordinate_lookup_index %d,\n" \
+                            "table has less than 1 element!\n", __LINE__);
             return(-1);
            };
         coords->a_last= 0; coords->b_last= 0; coords->x_last= x; 
@@ -468,16 +641,69 @@ static int coordinate_lookup_index(csm_coordinates *coords,double x,
     return( coords->ret_last=1 );
   }       
          
-        /*::::::::::::::::::::::::::::::::::::::::::::*/
-        /*       lookup an y-value in the table       */
-        /*::::::::::::::::::::::::::::::::::::::::::::*/
+    /*----------------------------------------------------*/
+    /*     utilities for csm_linear_function (private)    */
+    /*----------------------------------------------------*/
 
-        /*/////////////////////////////////////////// */
-        /*                  private                   */
-        /*/////////////////////////////////////////// */
+        /*               calculation                  */
+
+/*! \internal \brief compute y from a given x [static]
+
+  This function computes y when x is given for a linear function.
+  A linear function is a 
+  \param p pointer to the linear function structure
+  \param x the value of x 
+*/
+static double linear_get_y(csm_linear_function *p, double x)
+  { return( (p->a) + (p->b)*x ); }
+
+/*! \internal \brief compute x from a given y [static]
+
+  This function computes x when y is given for a linear function
+  \param p pointer to the linear function structure
+  \param y the value of y 
+*/
+static double linear_get_x(csm_linear_function *p, double y)
+  { return( (y - (p->a))/(p->b) ); }
+
+/*! \internal \brief compute delta-y from a given delta-x [static]
+
+  This function computes delta-y when delta-x is given for a linear function
+  \param p pointer to the linear function structure
+  \param x the value of x 
+*/
+static double linear_delta_get_y(csm_linear_function *p, double x)
+  { return( (p->b)*x ); }
+
+/*! \internal \brief compute delta-x from a given delta-y [static]
+
+  This function computes delta-x when delta-y is given for a linear function
+  \param p pointer to the linear function structure
+  \param y the value of y 
+*/
+static double linear_delta_get_x(csm_linear_function *p, double y)
+  { return( y/(p->b) ); }
+
+    /*----------------------------------------------------*/
+    /*    utilities for csm_1d_functiontable (private)    */
+    /*----------------------------------------------------*/
+
+        /*              initialization                */
+
+static void init_1d_functiontable(csm_1d_functiontable *ft)
+  { init_coordinates(&(ft->x));
+    init_coordinates(&(ft->y));
+  }
+
+static void reinit_1d_functiontable(csm_1d_functiontable *ft)
+  { reinit_coordinates(&(ft->x));
+    reinit_coordinates(&(ft->y));
+  }
+  
+        /*        lookup a value in the table         */
 
 static double lookup_1d_functiontable(csm_1d_functiontable *ft, double x,
-				     boolean invert)
+				     csm_bool invert)
   { int res,a,b;
     double xa,xb,ya,yb;
     csm_coordinate c;
@@ -515,16 +741,29 @@ static double lookup_1d_functiontable(csm_1d_functiontable *ft, double x,
     return( ya + (x-xa)/(xb-xa) * (yb-ya) );
   }
 
-        /*::::::::::::::::::::::::::::::::::::::::::::*/
-        /*       lookup a value in the xy-table       */
-        /*::::::::::::::::::::::::::::::::::::::::::::*/
+    /*----------------------------------------------------*/
+    /*    utilities for csm_2d_functiontable (private)    */
+    /*----------------------------------------------------*/
 
-        /*/////////////////////////////////////////// */
-        /*                  private                   */
-        /*/////////////////////////////////////////// */
+        /*              initialization                */
+
+static void init_2d_functiontable(csm_2d_functiontable *ft)
+  { init_coordinates(&(ft->x));
+    init_coordinates(&(ft->y));
+  }
+
+static void reinit_2d_functiontable(csm_2d_functiontable *ft)
+  { reinit_coordinates(&(ft->x));
+    reinit_coordinates(&(ft->y));
+    if (ft->z!=NULL)
+      free(ft->z);
+    ft->z= NULL;
+  }
+
+        /*       lookup a value in the xy-table       */
 
 static double lookup_2d_functiontable(csm_2d_functiontable *ft, 
-				     double x, double y)
+				      double x, double y)
   { int res,xia,xib,yia,yib;
     double xa,xb,ya,yb;
     double zaa,zab,zba,zbb;
@@ -599,63 +838,215 @@ printf(" ret: %f\n",
  }
   
     /*----------------------------------------------------*/
-    /*@IL               generic functions                 */
+    /*@IL           generic functions (public)            */
     /*----------------------------------------------------*/
 
-        /*\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
-        /*                  public                    */
-        /*\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
+/*! \brief compute x from a given y 
+
+  This function computes x when y is given. Note that is doesn't
+  work for two-dimensional function tables. For these, the 
+  function returns 0
+  \param f pointer to the function object
+  \param y the value of y 
+*/
 
 /*@EX(1)*/
 double csm_x(csm_function *f, double y)
-  { if (f->type==CSM_NOTHING)
-      { return(0); };
-    if (f->type==CSM_LINEAR)
-      { return(linear_get_x(&(f->f.lf), y)); };
-    if (f->type==CSM_1D_TABLE)
-      { return( lookup_1d_functiontable(&(f->f.tf_1), y, TRUE) ); };
-    return(0);
+  { csm_Function *func= (csm_Function *)f;
+    
+    if (func->on_hold)
+      return(func->last);
+
+    semTake(func->semaphore, WAIT_FOREVER);
+
+    if (func->on_hold)
+      { semGive(func->semaphore);
+        return(func->last); 
+      };
+
+    switch (func->type)
+      { case CSM_NOTHING:
+               func->last= 0; 
+	       break;
+	case CSM_LINEAR:
+	       func->last= linear_get_x(&(func->f.lf), y);
+	       break;	
+	case CSM_1D_TABLE:
+	       func->last= lookup_1d_functiontable(&(func->f.tf_1),y, 
+	       					   CSM_TRUE);
+	       break;	
+        default:
+	       func->last=0;
+	       break;
+      };
+    semGive(func->semaphore);	  	       
+    return(func->last);
   }
+
+/*! \brief compute y from a given x 
+
+  This function computes y when x is given. Note that is doesn't
+  work for two-dimensional function tables. For these, the 
+  function returns 0
+  \param f pointer to the function object
+  \param x the value of x 
+*/
 
 /*@EX(1)*/
 double csm_y(csm_function *f, double x)
-  { if (f->type==CSM_NOTHING)
-      { return(0); };
-    if (f->type==CSM_LINEAR)
-      { return(linear_get_y(&(f->f.lf), x)); };
-    if (f->type==CSM_1D_TABLE)
-      { return( lookup_1d_functiontable(&(f->f.tf_1), x, FALSE) ); };
-    return(0);
+  { csm_Function *func= (csm_Function *)f;
+
+    if (func->on_hold)
+      return(func->last);
+
+    semTake(func->semaphore, WAIT_FOREVER);
+
+    if (func->on_hold)
+      { semGive(func->semaphore);
+        return(func->last); 
+      };
+
+    switch (func->type)
+      { case CSM_NOTHING:
+               func->last= 0; 
+	       break;
+	case CSM_LINEAR:
+	       func->last= linear_get_y(&(func->f.lf), x);
+	       break;	
+	case CSM_1D_TABLE:
+	       func->last= lookup_1d_functiontable(&(func->f.tf_1),x, 
+	       					   CSM_FALSE);
+	       break;	
+        default:
+	       func->last=0;
+	       break;
+      };  
+    semGive(func->semaphore);	  	       
+    return(func->last);
   }
   
+/*! \brief compute delta-x from a given delta-y 
+
+  This function computes a delta-x when a delta-y is given.
+  Note that this function only works with linear functions.
+  For all other types, this function
+  returns 0.
+  \param f pointer to the function object
+  \param y the given delta-y
+*/
+
 /*@EX(1)*/
 double csm_dx(csm_function *f, double y)
-  { if (f->type==CSM_LINEAR)
-      { return(linear_delta_get_x(&(f->f.lf), y)); };
-    return(0);
+  { csm_Function *func= (csm_Function *)f;
+
+    if (func->on_hold)
+      return(func->last);
+
+    semTake(func->semaphore, WAIT_FOREVER);
+
+    if (func->on_hold)
+      { semGive(func->semaphore);
+        return(func->last); 
+      };
+
+    if (func->type==CSM_LINEAR)
+      func->last= linear_delta_get_x(&(func->f.lf), y);
+    else
+      func->last=0;
+      
+    semGive(func->semaphore);
+    return(func->last);
   }
+
+/*! \brief compute delta-y from a given delta-x 
+
+  This function computes a delta-y when a delta-x is given.
+  Note that this function only works with linear functions.
+  For all other types, this function
+  returns 0.
+  \param f pointer to the function object
+  \param x the given delta-x
+*/
 
 /*@EX(1)*/
 double csm_dy(csm_function *f, double x)
-  { if (f->type==CSM_LINEAR)
-      { return(linear_delta_get_y(&(f->f.lf), x)); };
-    return(0);
+  { csm_Function *func= (csm_Function *)f;
+
+    if (func->on_hold)
+      return(func->last);
+
+    semTake(func->semaphore, WAIT_FOREVER);
+
+    if (func->on_hold)
+      { semGive(func->semaphore);
+        return(func->last); 
+      };
+
+    if (func->type==CSM_LINEAR)
+      func->last= linear_delta_get_y(&(func->f.lf), x);
+    else
+      func->last=0;
+      
+    semGive(func->semaphore);
+    return(func->last);
   }
+
+/*! \brief compute z from a given x and y 
+
+  This function computes z for two-dimensional function table 
+  when x and y are given. For all other function types, it returns
+  0.
+  \param f pointer to the function object
+  \param x the value of x
+  \param y the value of y 
+*/
 
 /*@EX(1)*/
 double csm_z(csm_function *f, double x, double y)
-  { if (f->type==CSM_2D_TABLE)
-      { return( lookup_2d_functiontable(&(f->f.tf_2), x, y)); };
-    return(0);
+  { csm_Function *func= (csm_Function *)f;
+
+    if (func->on_hold)
+      return(func->last);
+
+    semTake(func->semaphore, WAIT_FOREVER);
+  
+    if (func->on_hold)
+      { semGive(func->semaphore);
+        return(func->last); 
+      };
+
+    if (func->type==CSM_2D_TABLE)
+      func->last= lookup_2d_functiontable(&(func->f.tf_2), x, y); 
+    else
+      func->last=0;
+
+    semGive(func->semaphore);
+    return(func->last);
   }
   
     /*----------------------------------------------------*/
     /*@IL                initialization                   */
     /*----------------------------------------------------*/
 
-        /*/////////////////////////////////////////// */
-        /*                  private                   */
-        /*/////////////////////////////////////////// */
+      /*   initialize a csm_Function object (private)   */
+
+static void reinit_function(csm_function *f)
+  { csm_Function *func= (csm_Function *)f;
+
+    if (func->type==CSM_NOTHING)
+      { return; };
+    if (func->type==CSM_1D_TABLE)
+      reinit_1d_functiontable( &(func->f.tf_1) );
+    if (func->type==CSM_2D_TABLE)
+      reinit_2d_functiontable( &(func->f.tf_2) );
+    
+    /* @@@@ CAUTION: currently there is no locking,
+       no test wether another process is currently 
+       accessing the structure */
+    func->type= CSM_NOTHING;
+  }
+     
+      /*  scan a string for a list of doubles (private) */
 
 static int strdoublescan(char *st, double *d, int no_of_cols)
   /* returns the number of numbers found in the line, d may be null,
@@ -691,60 +1082,126 @@ static int strdoublescan(char *st, double *d, int no_of_cols)
     return(no_of_cols);  /* everything that was expected was found */
   }  
     
-        /*\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
-        /*                  public                    */
-        /*\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
+      /*          define a function (public)            */
+
+/*! \brief define a linear function
+
+  This function initializes a \ref csm_function structure as
+  a linear function (y= a+b*x). 
+  \param f pointer to the function object
+  \param a offset of y= a+b*x
+  \param b multiplier of y= a+b*x
+*/
 
 /*@EX(1)*/
 void csm_def_linear(csm_function *f, double a, double b)
   /* y= a+b*x */
-  { f->type= CSM_LINEAR;
-    (f->f.lf).a= a;
-    (f->f.lf).b= b;
+  { 
+    csm_Function *func= (csm_Function *)f;
+
+    semTake(func->semaphore, WAIT_FOREVER);
+    func->on_hold= CSM_TRUE;
+    semGive(func->semaphore);
+
+    reinit_function(f);
+  
+    func->type= CSM_LINEAR;
+    (func->f.lf).a= a;
+    (func->f.lf).b= b;
+
+    func->on_hold= CSM_FALSE;
   }
-  
+ 
+/*! \brief re-define the offset of a linear function
+
+  This function re-defines the offset-factor of 
+  a linear function (y= a+b*x). 
+  \param f pointer to the function object
+  \param a offset of y= a+b*x
+  \return returns CSM_FALSE in case of an error, CSM_TRUE otherwise
+*/
+
 /*@EX(1)*/
-boolean csm_read_linear(FILE *f, csm_function *func)
-  { char line[128];
-  
-    if (NULL==fgets(line, 127, f))
-      return(FALSE);
-    if (2!=sscanf(line, " %lf %lf", &((func->f.lf).a), &((func->f.lf).b)))
-      return(FALSE);
-    return(TRUE);
-  }
-  
+csm_bool csm_def_linear_offset(csm_function *f, double a)
+  { csm_Function *func= (csm_Function *)f;
+
+    if (func->type!=CSM_LINEAR)
+      { DBG_MSG_PRINTF2("error in IDCP:csm_def_linear_offset line %d,\n" \
+                        "not a linear function!\n", __LINE__);
+        return(CSM_FALSE);
+      };
+
+    semTake(func->semaphore, WAIT_FOREVER);
+    func->f.lf.a= a;  
+    semGive(func->semaphore);
+
+    return(CSM_TRUE);
+  } 
+   
+/*! \brief read parameters of one-dimensional function table
+
+  This function reads a one-dimensional function-table from a 
+  file. 
+  \param filename the name of the file
+  \param f pointer to the function object
+*/
+
 /*@EX(1)*/
-boolean csm_read_table(FILE *f, csm_function *func, long len, double x_start)
+csm_bool csm_read_1d_table(char *filename, csm_function *fu) 
 /* if len==0, the table length is determined by counting the number of lines
    in the file from the current position to it's end */
   { char line[128];
     long pos;
     long i;
+    csm_Function *func= (csm_Function *)fu;
     csm_1d_functiontable *ft= &(func->f.tf_1);
     csm_coordinate *xc, *yc;
+    int len;
+    FILE *f;
     
-    func->type= CSM_1D_TABLE;
-    if (len<=0)
-      { pos= ftell(f);
-        for(len=0; NULL!=fgets(line, 127, f); len++);
-        if (-1==fseek(f, pos, SEEK_SET))
-          return(FALSE);
+    if (NULL==(f=fopen(filename,"r"))) /* vxworks doesn't accept "rt" */
+      { DBG_MSG_PRINTF2("error in IDCP:csm_read_xytable line %d,\n" \
+                        "file open error!\n", __LINE__);
+        return(CSM_FALSE);
+      };
+
+    pos= ftell(f);
+    for(len=0; NULL!=fgets(line, 127, f); len++);
+    if (-1==fseek(f, pos, SEEK_SET))
+      { fclose(f);                
+        return(CSM_FALSE); 
       };
     
-    if (!init_coordinates(&(ft->x), len))
-      return(FALSE);
+    semTake(func->semaphore, WAIT_FOREVER);
+    func->on_hold= CSM_TRUE;
+    semGive(func->semaphore);
     
-    if (!init_coordinates(&(ft->y), len))
-      return(FALSE);
+    reinit_function(fu);
+
+    init_1d_functiontable(ft);
     
+    if (!alloc_coordinates(&(ft->x), len))
+      { fclose(f);                
+	reinit_function(fu);
+        func->on_hold= CSM_FALSE;
+	return(CSM_FALSE); 
+      };
+
+    if (!alloc_coordinates(&(ft->y), len))
+      { fclose(f);                
+	reinit_function(fu);
+        func->on_hold= CSM_FALSE;
+	return(CSM_FALSE); 
+      };
+
     xc= (ft->x).coordinate;
     yc= (ft->y).coordinate;
     
     for(i=0;(len>0) && (NULL!=fgets(line, 127, f)); len--)
       { if (2!=sscanf(line, " %lf %lf", &(xc->value), &(yc->value)))
-          { warning_msg("%s: the following line of the data-file "
-                        "was not understood:\n%s\n", __FUNCTION__, line);
+          { DBG_MSG_PRINTF4("warning[%s:%d]: the following line of the "
+	           "data-file was not understood:\n%s\n", 
+		   __FILE__,__LINE__,line);
 	    continue;
           };
 	xc->index= i; 
@@ -752,24 +1209,39 @@ boolean csm_read_table(FILE *f, csm_function *func, long len, double x_start)
         i++, xc++,yc++;
       };
     if (!resize_coordinates(&(ft->x), i))
-      return(FALSE);
+      { fclose(f);                
+	reinit_function(fu);
+        func->on_hold= CSM_FALSE;
+        return(CSM_FALSE); 
+      };
     if (!resize_coordinates(&(ft->y), i))
-      return(FALSE);
+      { fclose(f);                
+	reinit_function(fu);
+        func->on_hold= CSM_FALSE;
+        return(CSM_FALSE); 
+      };
+    fclose(f);
       
+    func->type= CSM_1D_TABLE;
+
     coordinate_sort(&(ft->x));
     coordinate_update_backlinks(&(ft->x), &(ft->y));
     coordinate_sort(&(ft->y));
     coordinate_update_backlinks(&(ft->y), &(ft->x));
-    return(TRUE);
+    func->on_hold= CSM_FALSE;
+    return(CSM_TRUE);
   } 
 
-/*@EX(2)*/
-boolean csm_read_xytable(FILE *f, csm_function *func, 
-                         long rows, long columns) 
-/* if rows==0, the table length is determined by counting the number of lines
-   in the file from the current position to it's end */
-/* if columns==0, the table length is determined by counting the items in the
-   first line of the file*/
+/*! \brief read parameters of two-dimensional function table
+
+  This function reads a two-dimensional function-table from a 
+  file. 
+  \param filename the name of the file
+  \param f pointer to the function object
+*/
+
+/*@EX(1)*/
+csm_bool csm_read_2d_table(char *filename, csm_function *fu) 
 /* file format:
     y1   y2   y3  ..
 x1  z11  z12  z13 ...
@@ -783,28 +1255,55 @@ x2  z21  z22  z23 ...
     long i,j,lines;
     double *buffer;
     double *zptr;
+    csm_Function *func= (csm_Function *)fu;
     csm_2d_functiontable *ft= &(func->f.tf_2);
     csm_coordinate *xc, *yc;
+    FILE *f;
+    int columns,rows;
 
-    func->type= CSM_2D_TABLE;
+    if (NULL==(f=fopen(filename,"r"))) /* vxworks doesn't accept "rt" */
+      { DBG_MSG_PRINTF2("error in IDCP:csm_read_xytable line %d,\n" \
+                        "file open error!\n", __LINE__);
+        return(CSM_FALSE);
+      };
+    
     if (NULL==fgets(line, 1024, f))
-      return(FALSE); 
+      { fclose(f);                
+        return(CSM_FALSE); 
+      };
        
-    if (columns<=0)
-      columns= strdoublescan(line, NULL, 512);
+    columns= strdoublescan(line, NULL, 512);
     if (columns<1)
-      return(FALSE);
+      { fclose(f);  
+        return(CSM_FALSE);
+      };	
     if (NULL==(buffer= malloc(sizeof(double)*(columns+1))))
-      { error_msg("%s: malloc failed", __FUNCTION__);
-        return(FALSE);
+      { DBG_MSG_PRINTF2("MALLOC FAILED in file %s\n",__FILE__);
+        fclose(f); 
+	return(CSM_FALSE);
       };
     if (columns!= (i= strdoublescan(line, buffer, columns)))
-      { error_msg("%s: unexpected error", __FUNCTION__);
-        return(FALSE);
+      { DBG_MSG_PRINTF3("unexpected err in line %d in file %s\n",
+                        __LINE__,__FILE__);
+        free(buffer);
+	fclose(f); 
+	return(CSM_FALSE);
       };
       
-    if (!init_coordinates(&(ft->y), columns))
-      return(FALSE);
+    semTake(func->semaphore, WAIT_FOREVER);
+    func->on_hold= CSM_TRUE;
+    semGive(func->semaphore);
+    
+    reinit_function(fu);
+    init_2d_functiontable(ft);
+
+    if (!alloc_coordinates(&(ft->y), columns))
+      { free(buffer);
+        reinit_function(fu);
+	fclose(f); 
+        func->on_hold= CSM_FALSE;
+	return(CSM_FALSE);
+      };
 
     yc= (ft->y).coordinate;
     
@@ -817,31 +1316,43 @@ x2  z21  z22  z23 ...
 	};
     };  	  
 
-    if (rows<=0)
-      { pos= ftell(f);
-        for(lines=0; NULL!=fgets(line, 1024, f); lines++);
-        if (-1==fseek(f, pos, SEEK_SET))
-          return(FALSE);
-	rows= lines;  
-      }
-    else
-      lines= rows;
-
-    if (!init_coordinates(&(ft->x), rows))
-      return(FALSE);
+    pos= ftell(f);
+    for(lines=0; NULL!=fgets(line, 1024, f); lines++);
+    if (-1==fseek(f, pos, SEEK_SET))
+      { free(buffer);
+        reinit_function(fu);
+	fclose(f); 
+        func->on_hold= CSM_FALSE;
+	return(CSM_FALSE);
+      };
+    rows= lines;  
+    
+    if (!alloc_coordinates(&(ft->x), rows))
+      { free(buffer);
+        reinit_function(fu);
+	fclose(f); 
+        func->on_hold= CSM_FALSE;
+	return(CSM_FALSE);
+      };
 
     xc= (ft->x).coordinate;
     
     if (!init_matrix(&(ft->z), rows, columns))
-      return(FALSE);
+      { free(buffer);
+        reinit_function(fu);
+	fclose(f); 
+        func->on_hold= CSM_FALSE;
+	return(CSM_FALSE);
+      };
 
     zptr= ft->z;
 
     for(i=0; (lines>0) && (NULL!=fgets(line, 1024, f)); lines--)
       { 
         if (columns+1 != strdoublescan(line, buffer, columns+1))
-          { warning_msg("%s: the following line of the data-file "
-              "was not understood:\n%s\n", __FUNCTION__, line);
+          { DBG_MSG_PRINTF4("warning[%s:%d]: the following line of the "
+	                    "data-file was not understood:\n%s\n", 
+			    __FILE__,__LINE__,line);
 	    continue;
 	  };  	   
 
@@ -857,29 +1368,81 @@ x2  z21  z22  z23 ...
     
     rows= i;
     if (!resize_coordinates(&(ft->x), rows))
-      return(FALSE);
+      { free(buffer);
+        reinit_function(fu);
+	fclose(f); 
+        func->on_hold= CSM_FALSE;
+	return(CSM_FALSE);
+      };
+
+    fclose(f); 
+
+    func->type= CSM_2D_TABLE;
 
     coordinate_sort(&(ft->x));
     coordinate_sort(&(ft->y));
-    return(TRUE);
+    func->on_hold= CSM_FALSE;
+    return(CSM_TRUE);
   } 
 
+  
+      /*         initialize the module (public)         */
+
+/*! \brief initialize the module
+
+  This function should be called once to initialize the
+  module.
+*/
+
 /*@EX(1)*/
-void csmbase_func_init(csm_function *f)
-  { f->type= CSM_NOTHING; }
+void csm_init(void)
+  { 
+    if (initialized)
+      return;
+    initialized= CSM_TRUE;
+#if USE_DBG
+    csm_dbg_init(); 
+#endif  
+  }
+  
+      /*          create a new function object          */
 
+
+/*! \brief create a new function object
+
+  This function returns a pointer to a new function object. The object
+  is initialized as an empty function
+  \return returns NULL in case of an error. Otherwise the
+          pointer to the csm_function is returned
+*/
+
+/*@EX(1)*/
+csm_function *csm_new_function(void)
+  { csm_Function *f= malloc(sizeof(csm_Function));
+  
+    if (f==NULL)
+      return(NULL);
+      
+    f->type= CSM_NOTHING;
+    f->last= 0;
+    f->on_hold= CSM_FALSE;
+    f->semaphore= semMCreate(SEM_Q_FIFO);
+    if (f->semaphore==NULL)
+      { free(f);
+        return(NULL);
+      };
+     
+    return((csm_function *)f);
+  }
+  
     /*----------------------------------------------------*/
-    /*@IL                  debugging                      */
+    /*@IL              debugging (public)                 */
     /*----------------------------------------------------*/
 
-        /*\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
-        /*                  public                    */
-        /*\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
-        
 void csm_pr_coordinates(csm_coordinates *c)
   { int i;
     printf("no . of elements: %d\n", c->no_of_elements);
-    if (c->initial)
+    if (c->a_last==-1)
       printf("(still in initial-state)\n"); 
     else
       { printf("a_last:%d  b_last:%d ret_last:%d  x_last:%f\n", 
@@ -903,11 +1466,11 @@ void csm_pr_1d_table(csm_1d_functiontable *tf)
   { int i;
     int l= (tf->x).no_of_elements;
   
-    if (tf->x.initial)
+    if (tf->x.a_last==-1)
       printf("x-coord is still in initial-state\n"); 
     else
       printf("x-a_last:%d  x-b_last:%d\n", tf->x.a_last, tf->x.b_last); 
-    if (tf->y.initial)
+    if (tf->y.a_last==-1)
       printf("x-coord is still in initial-state\n"); 
     else
       printf("y-a_last:%d  y-b_last:%d\n", tf->y.a_last, tf->y.b_last); 
@@ -942,29 +1505,53 @@ void csm_pr_2d_table(csm_2d_functiontable *ft)
   }
   
 void csm_pr_func(csm_function *f)
-  { printf("function type: \n");
-    switch( f->type)
+  { csm_Function *func= (csm_Function *)f;
+
+    if (func->on_hold)
+      printf("function is on hold!\n");
+    else
+      printf("function is operational\n");
+    
+    printf("Last calculated value: %f\n", func->last);
+    
+    printf("function type: \n");
+    switch( func->type)
       { case CSM_NOTHING: 
              printf("CSM_NOTHING\n"); 
              break;
         case CSM_LINEAR:  
              printf("CSM_LINEAR\n"); 
-             csm_pr_linear(&(f->f.lf));
+             csm_pr_linear(&(func->f.lf));
              break;
         case CSM_1D_TABLE:   
              printf("CSM_1D TABLE\n"); 
              printf("normal function:\n");
-             csm_pr_1d_table(&(f->f.tf_1));
+             csm_pr_1d_table(&(func->f.tf_1));
              break;
 	case CSM_2D_TABLE:
              printf("CSM_2D_TABLE\n");
-	     csm_pr_2d_table(&(f->f.tf_2));
+	     csm_pr_2d_table(&(func->f.tf_2));
              break;
         default: 
-             printf("%d (unknown)\n", f->type);
+             printf("%d (unknown)\n", func->type);
              break;
       };
   }
         
 
 /*@EM("#endif\n") */
+
+#if 0
+csm_free implementieren.
+
+strukturen cachen (anhand des Filenamens)
+
+Filenamen übergeben
+
+evtl die csm-struktur direkt allozieren
+
+reload von Files implementieren
+  im Fehlerfall die alten Daten behalten
+
+
+#endif
