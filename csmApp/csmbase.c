@@ -35,9 +35,9 @@
 /*@EM("    /@   RCS-properties of the underlying source csmbase.c   @/\n")@IT*/   
     
 /* Author:              $Author: pfeiffer $
-   check-in date:       $Date: 2004/04/27 11:07:12 $
+   check-in date:       $Date: 2004/06/04 11:37:36 $
    locker of this file: $Locker:  $
-   Revision:            $Revision: 1.12 $
+   Revision:            $Revision: 1.13 $
    State:               $State: Exp $
 */
    
@@ -196,7 +196,7 @@ Version 0.96:
 
 
 #include <vxWorks.h>
-#include <semaphore.h> 
+#include <semaphore.h>
 
 
 #if USE_DBG
@@ -206,6 +206,7 @@ Version 0.96:
 #include <errlog.h> /* epics error printf */    
 #endif
 
+#include <ctype.h>
 #include <stdlib.h>
 #include <stdio.h>    /*@IL*/
 #include <string.h>
@@ -1053,6 +1054,19 @@ static void reinit_function(csm_function *f)
        accessing the structure */
     func->type= CSM_NOTHING;
   }
+
+      /*  scan a string for a list of doubles (private) */
+
+static csm_bool str_empty_or_comment(char *st)
+  { if (*st=='#')
+      return(CSM_TRUE);
+    for(;*st!=0; st++)
+      { if (isspace(*st))
+          continue;
+	return(CSM_FALSE);
+      };
+    return(CSM_TRUE);
+  } 
      
       /*  scan a string for a list of doubles (private) */
 
@@ -1209,11 +1223,13 @@ csm_bool csm_read_1d_table(char *filename, csm_function *fu)
     yc= (ft->y).coordinate;
     
     for(errcount=0, i=0;(len>0) && (NULL!=fgets(line, 127, f)); len--)
-      { if (2!=sscanf(line, " %lf %lf %c", 
+      { if (str_empty_or_comment(line))
+          continue;
+        if (2!=sscanf(line, " %lf %lf %c", 
                       &(xc->value), &(yc->value), &dummy))
           { DBG_MSG_PRINTF4("warning[%s:%d]: the following line of the "
-	           "data-file was not understood:\n%s\n", 
-		   __FILE__,__LINE__,line);
+	           "data-file (%s) was not understood:\n%s\n", 
+		   __FILE__,__LINE__,filename,line);
 	    if (++errcount<4)
 	      continue; 
 	    fclose(f);                
@@ -1378,10 +1394,12 @@ x2  z21  z22  z23 ...
 
     for(errcount=0, i=0; (lines>0) && (NULL!=fgets(line, 1024, f)); lines--)
       { 
+        if (str_empty_or_comment(line))
+          continue;
         if (columns+1 != strdoublescan(line, buffer, columns+1))
           { DBG_MSG_PRINTF4("warning[%s:%d]: the following line of the "
-	                    "data-file was not understood:\n%s\n", 
-			    __FILE__,__LINE__,line);
+	                    "data-file (%s) was not understood:\n%s\n", 
+			    __FILE__,__LINE__,filename,line);
 	    if (++errcount<4)
 	      continue; 
 	    fclose(f);                
