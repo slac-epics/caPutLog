@@ -2,8 +2,8 @@
 #
 # Sets file permissions in an EPICS / CapFast / CVS directory tree
 #
-# Time-stamp: <97/09/24 16:12:38 lange>
-# $Id: SetPerms,v 1.6 1997/09/24 14:13:08 lange Exp $
+# Time-stamp: <97/09/24 16:14:37 lange>
+# $Id: SetPerms,v 1.7 1997/09/24 14:14:57 lange Exp $
 #
 PROG=`basename $0`
 
@@ -19,7 +19,7 @@ else
 	    echo $USAGE
 	    exit 1
 	else
-	    Case $f in              # Prefix relative paths with `pwd`
+	    case $f in                   # Prefix relative paths with `pwd`
 	    /*) ;;
 	    *) f=`pwd`/$f ;;
 	    esac
