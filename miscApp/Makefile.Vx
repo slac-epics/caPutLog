@@ -10,6 +10,8 @@ ifdef WITH_MCAN
 USR_CFLAGS += -DMCAN_ON
 endif
 
+INC += initHooks.h
+
 PROD += initHooks.o
 PROD += mv162InitHooks.o
 
