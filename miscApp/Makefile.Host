@@ -6,6 +6,6 @@ include $(TOP)/config/CONFIG_APP
 
 SCRIPTS += SetPerms
 
-include $(TOP)/config/RULES.Unix
+include $(TOP)/config/RULES.Host
 #-----------------------------------------------
 #  ADD RULES AFTER THIS LINE

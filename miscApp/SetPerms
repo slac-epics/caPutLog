@@ -4,8 +4,8 @@
 #
 # Completely cron-job-aware, runs even with "PATH=/usr/bin"
 #
-# Time-stamp: <98/08/12 17:22:30 lange>
-# $Id: SetPerms,v 1.17 1998/08/12 15:26:33 lange Exp $
+# Time-stamp: <99/02/02 18:37:49 lange>
+# $Id: SetPerms,v 1.18 1999/02/02 17:40:07 lange Exp $
 #
 PROG=`basename $0`
 
@@ -110,7 +110,7 @@ do
 
 ###############################################################################
 
-    */vw/* | */epics/base* | */epics/extensions* | */epics/local*)
+    */vw/* | */epics/base* | */epics/extensions* )
 
 # Set everything to group epics and ???r-X---
 
@@ -132,9 +132,10 @@ do
        
 # Make config files etc. world readable
 
-	if echo $f | grep -q "/config\|/dbd\|/include\|/lib\|/lib_sl\|/templates"; then
+	files=`find . -type d | grep "/config\|/dbd\|/include\|/lib\|/lib_sl\|/templates" | grep -v "/src/"`
+	if [ -n "$files" ]; then
 	  echo Making config, dbd, include and lib files world readable ...
-          chmod -R o+r $f/* > /dev/null 2>&1
+          echo $files | xargs chmod -R o+r $f > /dev/null 2>&1
 	fi
 
 # Make binary executables unreadable for others
