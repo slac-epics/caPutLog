@@ -4,8 +4,8 @@
 #
 # Completely cron-job-aware, runs even with "PATH=/usr/bin"
 #
-# Time-stamp: <13 Feb 98 09:08:00 Thomas Birke>
-# $Id: SetPerms,v 1.13 1998/02/13 08:10:43 birke Exp $
+# Time-stamp: <13 Feb 98 10:19:37 Thomas Birke>
+# $Id: SetPerms,v 1.14 1998/02/13 09:31:13 birke Exp $
 #
 PROG=`basename $0`
 
@@ -49,7 +49,7 @@ do
 
 	echo Setting all directories to mode rwxrwxr-x ...
 
-	find $f/ -type d -user $USER | xargs -n 100 chmod u=rwx,g=rwx,o=rx
+	find $f/ -type d -user $USER | xargs chmod u=rwx,g=rwx,o=rx 2>/dev/null
 
 	;;
 
@@ -67,7 +67,7 @@ do
 
 	echo Setting all directories to mode rwxrwxr-x ...
 
-	find $f/ -type d -user $USER | xargs -n 100 chmod u=rwx,g=rwx,o=rx 
+	find $f/ -type d -user $USER | xargs chmod u=rwx,g=rwx,o=rx  2>/dev/null
 
 	;;
 
@@ -181,7 +181,7 @@ do
 
 	echo Setting all directories to mode rwxrwxr-x ...
 
-	find $f/ -type d -user $USER | xargs -n 100 chmod u=rwx,g=rwx,o=rx
+	find $f/ -type d -user $USER | xargs chmod u=rwx,g=rwx,o=rx 2>/dev/null
 
 	;;
 
