@@ -41,7 +41,6 @@
 #include        <errMdef.h>
 
 #ifdef MCAN_ON
-#include        <multican.h>
 #include        <gps.h>
 #endif
 
@@ -57,12 +56,10 @@
  */
 
 #ifdef MCAN_ON
-extern mcan_List_Table* list_table;
-#ifdef ATTACH
 /*###BEGIN OF USERAREA-1###*/
-extern int test_init1_attach(void);
+/* Attach function declarations, e.g. */
+/* extern int test_init1_attach(void); */
 /*###END OF USERAREA-1###*/
-#endif
 #endif
 
 /* If this function (initHooks) is loaded, iocInit calls this function
@@ -70,80 +67,73 @@ extern int test_init1_attach(void);
 void initHooks(callNumber)
 int	callNumber;
 {
-#ifdef MCAN_ON   
-   int i;
-#endif   
-
-#ifdef mv162
-   void* mv162_gcsr = (void*) 0xc200;
-   void* dummy = NULL;
-#endif
-
 	switch (callNumber) {
 	case INITHOOKatBeginning :
 #ifdef mv162
+	{  /* Register the MV162's VME2chip addresses that are
+	      always mapped onto the VME (for mp support) */
+	   void* mv162_gcsr = (void*) 0xc200;
+	   void* dummy = NULL;
 	   devRegisterAddress(
 	      "MV162 VME2chip GCSR",
 	      atVMEA16,
 	      mv162_gcsr,
 	      0x100,
 	      &dummy);
+	}
 #endif
-	    break;
-	case INITHOOKafterGetResources :
-	    break;
-	case INITHOOKafterLogInit :
-	    break;
-	case INITHOOKafterCallbackInit :
-	    break;
-	case INITHOOKafterCaLinkInit :
-	    break;
-	case INITHOOKafterInitDrvSup :
+	break;
 
+	case INITHOOKafterGetResources :
+	   break;
+	case INITHOOKafterLogInit :
+	   break;
+	case INITHOOKafterCallbackInit :
+	   break;
+	case INITHOOKafterCaLinkInit :
+	   break;
+
+	case INITHOOKafterInitDrvSup :
 #ifdef MCAN_ON
-#ifdef ATTACH
 /*###BEGIN OF USERAREA-2###*/
-	    mcan_attach("lowcal", 1, test_init1_attach);
+	   /* Calls to attach other users to protocols, e.g. */
+	   /* mcan_attach("lowcal", 1, test_init1_attach); */
 /*###END OF USERAREA-2###*/
 #endif
-#endif
+	   break;
 
-	    break;
 	case INITHOOKafterInitRecSup :
-	break;
+	   break;
 	case INITHOOKafterInitDevSup :
-	    break;
+	   break;
 	case INITHOOKafterTS_init :
-	    break;
+	   break;
 	case INITHOOKafterInitDatabase :
-	    break;
+	   break;
 	case INITHOOKafterFinishDevSup :
-	    break;
+	   break;
 	case INITHOOKafterScanInit :
-	    break;
+	   break;
+
 	case INITHOOKafterInterruptAccept :
 #ifdef MCAN_ON
-          /*Start reader and timer if any protocol is used by one or more elements*/
-	   for (i = 0; i < MCAN_PROT; i++) {
-	      if (mcan_list_table[i].done == MCAN_INIT_SUCCESS) {
-		 if ((gpsStart()) == 1) {
-		    errMessage(ERROR,"gpsStart failed!\n");
-		    return;
-		 }
-#ifdef INITHOOK_D
-		 printf("gpsStart done.\n");
-#endif
-		 break;
-	      }
+	   /* Start GPS's reader and timer tasks */
+	   if (gpsStart() == ERROR) {
+	      errMessage(ERROR,"gpsStart failed!\n");
+	      break;
 	   }
+#ifdef INITHOOK_D
+	   printf("gpsStart done.\n");
 #endif
-	    break;
+#endif
+	   break;
+
 	case INITHOOKafterInitialProcess :
-	    break;
+	   break;
 	case INITHOOKatEnd :
-	    break;
+	   break;
 	default:
-	    break;
+	   break;
 	}
 	return;
 }
