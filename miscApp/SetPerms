@@ -4,8 +4,8 @@
 #
 # Completely cron-job-aware, runs even with "PATH=/usr/bin"
 #
-# Time-stamp: <13 Feb 98 10:19:37 Thomas Birke>
-# $Id: SetPerms,v 1.14 1998/02/13 09:31:13 birke Exp $
+# Time-stamp: <98/05/12 17:12:55 lange>
+# $Id: SetPerms,v 1.15 1998/05/12 15:13:42 lange Exp $
 #
 PROG=`basename $0`
 
@@ -91,13 +91,20 @@ do
 	    echo $files | xargs chgrp epima
 	fi
        
-# Make config files world readable
+# Make config files etc. world readable
 
 	if [ -d $f/config ]; then
 	  echo Making config, dbd, include and lib files world readable ...
 		       
 	  chmod -R o+r $f/config $f/dbd $f/include $f/lib $f/lib_sl > /dev/null 2>&1
 	fi
+
+# Make template files world readable
+
+	if echo $f | grep -q "base.*/templates"; then
+	  echo Making template files world readable ...
+	  chmod -R o+r $f/* > /dev/null 2>&1
+        fi
 
 # Make binary executables unreadable for others
 

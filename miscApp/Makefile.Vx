@@ -4,13 +4,7 @@ include $(TOP)/config/CONFIG_APP
 #-----------------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
-USR_CFLAGS += -D$(T_A)
-
-ifdef WITH_MCAN
-USR_CFLAGS += -DMCAN_ON
-endif
-
-PROD +=  initHooks.o
+#USR_CFLAGS += -D$(T_A)
 
 include $(TOP)/config/RULES.Vx
 #-----------------------------------------------
