@@ -13,38 +13,37 @@
  *
  * Author(s):	Ralph Lange
  *
- * $Revision: 1.8 $
- * $Date: 1998/06/04 10:24:12 $
+ * $Revision: 1.9 $
+ * $Date: 1999/09/08 18:56:17 $
  *
  * $Author: lange $
  *
- * $Log: debugmsg.h,v $
- * Revision 1.8  1998/06/04 10:24:12  lange
- * PC Bugfixes
+ * Revision log at end of file
  *
- * Revision 1.7  1997/02/11 18:59:23  lange
- * Beautified.
+ * This software is copyrighted by the BERLINER SPEICHERRING-
+ * GESELLSCHAFT FUER SYNCHROTRONSTRAHLUNG M.B.H., BERLIN, GERMANY.
+ * The following terms apply to all files associated with the software.
  *
- * Revision 1.6  1997/02/07 22:45:04  lange
- * += rcsid
+ * BESSY hereby grants permission to use, copy and modify this software
+ * and its documentation for non-commercial, educational or research
+ * purposes, provided that existing copyright notices are retained in
+ * all copies.
  *
- * Revision 1.5  1997/02/07 21:43:59  lange
- * SetDebug now defined without -DDEBUGMSG (prints message).
+ * The receiver of the software provides BESSY with all enhancements,
+ * including complete translations, made by the receiver.
  *
- * Revision 1.4  1996/11/22 13:49:08  lange
- * Small changes regarding DBG_INIT (now done in <mod>SetDebug).
+ * IN NO EVENT SHALL BESSY BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
+ * SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE
+ * OF THIS SOFTWARE, ITS DOCUMENTATION, OR ANY DERIVATIVES THEREOF, EVEN
+ * IF BESSY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Revision 1.3  1996/11/22 13:29:14  lange
- * Changed definition of logMsg to be somewhat compatible with vxWorks
- * (logLib.h).
+ * BESSY SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NON-INFRINGEMENT. THIS SOFTWARE IS PROVIDED
+ * ON AN "AS IS" BASIS, AND BESSY HAS NO OBLIGATION TO PROVIDE MAINTENANCE,
+ * SUPPORT, UPDATES, ENHANCEMENTS OR MODIFICATIONS.
  *
- * Revision 1.2  1996/07/19 13:15:41  lange
- * DEBUG -> DEBUGMSG.
- *
- * Revision 1.1  1996/06/24 18:30:39  lange
- * New debug macros.
- *
- * Copyright (c) 1996, 1997, 1998
+ * Copyright (c) 1996 - 1999
  *			Berliner Elektronenspeicherring-Gesellschaft
  *			      fuer Synchrotronstrahlung m.b.H.,
  *				     Berlin, Germany
@@ -70,7 +69,7 @@ extern void prefix##SetDebug (char);
 void prefix##SetDebug (char verb)						\
 {										\
 static char									\
-rcsid[] = "@(#)DEBUG: $Id: debugmsg.h,v 1.8 1998/06/04 10:24:12 lange Exp $";	\
+rcsid[] = "@(#)DEBUG: $Id: debugmsg.h,v 1.9 1999/09/08 18:56:17 lange Exp $";	\
 										\
    DBG_INIT;									\
    dbg_level = verb;								\
@@ -260,3 +259,52 @@ int return_0(void);
 #endif
 
 #endif /* #ifndef __DEBUGMSG_H */
+
+/*+**************************************************************************
+ *
+ * Project:	MultiCAN  -  EPICS-CAN-Connection
+ *
+ * Module:	None - valid for all modules
+ *
+ * File:	debugmsg.h
+ *
+ * Description:	Header file defining macros to implement and use a common
+ *              debug message system under vxWorks.
+ *
+ * Author(s):	Ralph Lange
+ *
+ * $Log: debugmsg.h,v $
+ * Revision 1.9  1999/09/08 18:56:17  lange
+ * += Copyrights disclaimer
+ *
+ * Revision 1.8  1998/06/04 10:24:12  lange
+ * PC Bugfixes
+ *
+ * Revision 1.7  1997/02/11 18:59:23  lange
+ * Beautified.
+ *
+ * Revision 1.6  1997/02/07 22:45:04  lange
+ * += rcsid
+ *
+ * Revision 1.5  1997/02/07 21:43:59  lange
+ * SetDebug now defined without -DDEBUGMSG (prints message).
+ *
+ * Revision 1.4  1996/11/22 13:49:08  lange
+ * Small changes regarding DBG_INIT (now done in <mod>SetDebug).
+ *
+ * Revision 1.3  1996/11/22 13:29:14  lange
+ * Changed definition of logMsg to be somewhat compatible with vxWorks
+ * (logLib.h).
+ *
+ * Revision 1.2  1996/07/19 13:15:41  lange
+ * DEBUG -> DEBUGMSG.
+ *
+ * Revision 1.1  1996/06/24 18:30:39  lange
+ * New debug macros.
+ *
+ * Copyright (c) 1996 - 1999
+ *			Berliner Elektronenspeicherring-Gesellschaft
+ *			      fuer Synchrotronstrahlung m.b.H.,
+ *				     Berlin, Germany
+ *
+ **************************************************************************-*/
