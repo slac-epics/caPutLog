@@ -35,9 +35,9 @@
 /*@EM("    /@   RCS-properties of the underlying source csmbase.c   @/\n")@IT*/   
     
 /* Author:              $Author: franksen $
-   check-in date:       $Date: 2004/09/17 10:26:42 $
+   check-in date:       $Date: 2004/09/17 10:49:11 $
    locker of this file: $Locker:  $
-   Revision:            $Revision: 1.17 $
+   Revision:            $Revision: 1.18 $
    State:               $State: Exp $
 */
    
@@ -324,14 +324,15 @@ struct csm_Function
 	  } f;            /*!< union that holds the actual data */
 
   };
-/*@IT*/
-typedef struct csm_Function csm_function;
-/*@ET*/
 
       /*................................................*/
       /*@IL       the function-object (public)          */
       /*................................................*/
 
+/*! \brief typedef-struct: the abstract csm function object */
+/*@IT*/
+/typedef struct csm_Function csm_function;
+/*@ET*/
 
 /*____________________________________________________________*/
 /*			  Variables			      */
@@ -1107,7 +1108,7 @@ static int strdoublescan(char *st, double *d, int no_of_cols)
 
   This function clears the \ref csm_function structure. All
   allocated memory is released, the type is set to \ref CSM_NOTHING.
-  \param f pointer to the function object
+  \param func pointer to the function object
 */
 
 /*@EX(1)*/
@@ -1129,12 +1130,12 @@ void csm_clear(csm_function *func)
   allocated memory is released, even the memory of the basic internal
   structure. This means that the cmd_function structure becomes
   invalid and cannot be used again later. Use this function with caution. 
-  \param f pointer to the function object
+  \param func pointer to the function object
 */
 /*@EX(1)*/
-void csm_free(csm_function *f)
-  { csm_clear(f);
-    free(f);
+void csm_free(csm_function *func)
+  { csm_clear(func);
+    free(func);
   }
 
       /*          define a function (public)            */
