@@ -57,7 +57,7 @@
  */
 
 #ifdef MCAN_ON
-extern list_table_type* list_table;
+extern mcan_List_Table* list_table;
 #ifdef ATTACH
 /*###BEGIN OF USERAREA-1###*/
 extern int test_init1_attach(void);
@@ -125,7 +125,7 @@ int	callNumber;
 #ifdef MCAN_ON
           /*Start reader and timer if any protocol is used by one or more elements*/
 	   for (i = 0; i < MCAN_PROT; i++) {
-	      if (list_table[i].done == MCAN_INIT_SUCCESS) {
+	      if (mcan_list_table[i].done == MCAN_INIT_SUCCESS) {
 		 if ((gpsStart()) == 1) {
 		    errMessage(ERROR,"gpsStart failed!\n");
 		    return;
