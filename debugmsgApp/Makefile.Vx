@@ -1,0 +1,11 @@
+# Makefile.Vx
+TOP = ../..
+include $(TOP)/config/CONFIG_APP
+#-----------------------------------------------
+#  ADD MACRO DEFINITIONS AFTER THIS LINE
+
+INC += debugmsg.h
+
+include $(TOP)/config/RULES.Vx
+#-----------------------------------------------
+#  ADD RULES AFTER THIS LINE
