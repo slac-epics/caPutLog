@@ -2,8 +2,8 @@
 #
 # Sets file permissions in an EPICS / CapFast / CVS directory tree
 #
-# Time-stamp: <97/12/03 11:37:23 lange>
-# $Id: SetPerms,v 1.9 1997/12/03 10:38:13 lange Exp $
+# Time-stamp: <97/12/18 11:21:40 lange>
+# $Id: SetPerms,v 1.10 1997/12/18 10:21:56 lange Exp $
 #
 PROG=`basename $0`
 
@@ -27,8 +27,6 @@ else
 	fi
     done
 fi
-
-# Exit if not in .../base or .../extensions or .../csr/capfast (I *love* shell programming)
 
 for f in $dirs
 do
@@ -165,8 +163,26 @@ do
 
 	;;
 
+    */htdocs/*)
+
+# Set everything to group wwwadm and ???r-Xr-X
+
+	echo Web tree: $f
+	echo Setting everything to group wwwadm and mode ???r-Xr-X ...
+		       
+	chgrp -R wwwadm $f/* > /dev/null 2>&1
+	chmod -R go=rX $f/* > /dev/null 2>&1
+
+# Set all directories to mode rwxrwxr-x
+
+	echo Setting all directories to mode rwxrwxr-x ...
+
+	find $f/ -type d -user $USER | xargs chmod u=rwx,g=rwx,o=rx
+
+	;;
+
   *)
-	echo Not in EPICS or CapFast Tree.
+	echo Not in EPICS or CapFast or Web Tree.
 	exit 1
 	;;
     esac
