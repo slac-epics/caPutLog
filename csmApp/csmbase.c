@@ -11,7 +11,7 @@
 /* module: CSM-BASE                                           */
 /* version-number of module: 1.0                              */
 /* author: Goetz Pfeiffer                                     */
-/* last modification date: 2004-04-15                         */
+/* last modification date: 2004-07-23                         */
 /* status: beta-test                                          */
 /*____________________________________________________________*/
 
@@ -35,9 +35,9 @@
 /*@EM("    /@   RCS-properties of the underlying source csmbase.c   @/\n")@IT*/   
     
 /* Author:              $Author: pfeiffer $
-   check-in date:       $Date: 2004/06/04 11:41:38 $
+   check-in date:       $Date: 2004/07/23 11:23:04 $
    locker of this file: $Locker:  $
-   Revision:            $Revision: 1.14 $
+   Revision:            $Revision: 1.15 $
    State:               $State: Exp $
 */
    
@@ -100,6 +100,10 @@ Version 0.96:
   
   Date: 2004-04-05
   in csm_read_table a superfluous parameter was removed
+
+  Date: 2004-07-23
+  a new function, csm_clear was added. This function releases all
+  memoty an csm_function occupies and sets its value to CSM_NOTHING
 */
 
     /*----------------------------------------------------*/
@@ -1107,6 +1111,32 @@ static int strdoublescan(char *st, double *d, int no_of_cols)
     return(no_of_cols);  /* everything that was expected was found */
   }  
     
+      /*          clear a function (public)             */
+
+/*! \brief clear a function
+
+  This function clears the \ref csm_function structure. All
+  allocated memory is released, the type is set to \ref CSM_NOTHING.
+  \param f pointer to the function object
+  \param a offset of y= a+b*x
+  \param b multiplier of y= a+b*x
+*/
+
+/*@EX(1)*/
+void csm_clear(csm_function *f)
+  { 
+    csm_Function *func= (csm_Function *)f;
+
+    semTake(func->semaphore, WAIT_FOREVER);
+    func->on_hold= CSM_TRUE;
+    semGive(func->semaphore);
+
+    reinit_function(f);
+  
+    func->on_hold= CSM_FALSE;
+  }
+
+
       /*          define a function (public)            */
 
 /*! \brief define a linear function
