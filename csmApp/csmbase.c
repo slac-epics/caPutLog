@@ -11,7 +11,7 @@
 /* module: CSM-BASE                                           */
 /* version-number of module: 1.0                              */
 /* author: Goetz Pfeiffer                                     */
-/* last modification date: 2004-07-23                         */
+/* last modification date: 2004-08-31                         */
 /* status: beta-test                                          */
 /*____________________________________________________________*/
 
@@ -35,9 +35,9 @@
 /*@EM("    /@   RCS-properties of the underlying source csmbase.c   @/\n")@IT*/   
     
 /* Author:              $Author: pfeiffer $
-   check-in date:       $Date: 2004/07/23 11:23:04 $
+   check-in date:       $Date: 2004/08/31 09:33:40 $
    locker of this file: $Locker:  $
-   Revision:            $Revision: 1.15 $
+   Revision:            $Revision: 1.16 $
    State:               $State: Exp $
 */
    
@@ -103,7 +103,12 @@ Version 0.96:
 
   Date: 2004-07-23
   a new function, csm_clear was added. This function releases all
-  memoty an csm_function occupies and sets its value to CSM_NOTHING
+  memory an csm_function occupies and sets its value to CSM_NOTHING
+
+  Date: 2004-08-31
+  a new function, csm_free was added. This function releases all
+  memory and finally releases the memory of the csm_function object
+  itself.  
 */
 
     /*----------------------------------------------------*/
@@ -1118,8 +1123,6 @@ static int strdoublescan(char *st, double *d, int no_of_cols)
   This function clears the \ref csm_function structure. All
   allocated memory is released, the type is set to \ref CSM_NOTHING.
   \param f pointer to the function object
-  \param a offset of y= a+b*x
-  \param b multiplier of y= a+b*x
 */
 
 /*@EX(1)*/
@@ -1136,6 +1139,21 @@ void csm_clear(csm_function *f)
     func->on_hold= CSM_FALSE;
   }
 
+      /*   free all data for a function (public)        */
+
+/*! \brief free a function-structure
+
+  This function frees the \ref csm_function structure. All
+  allocated memory is released, even the memory of the basic internal
+  structure. This means that the cmd_function structure becomes
+  invalid and cannot be used again later. Use this function with caution. 
+  \param f pointer to the function object
+*/
+/*@EX(1)*/
+void csm_free(csm_function *f)
+  { csm_clear(f);
+    free(f);
+  }
 
       /*          define a function (public)            */
 
