@@ -20,4 +20,4 @@ include $(TOP)/config/RULES.Vx
 #  ADD RULES AFTER THIS LINE
 
 csmbase.h: csmbase.c
-	$(UTIL)/bin/$(HOST_ARCH)/hgen.pl -h $@ $<
+	$(UTIL)/bin/$(HOST_ARCH)/hgen.pl -c -h $@ $<
