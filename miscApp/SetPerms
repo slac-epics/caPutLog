@@ -4,8 +4,8 @@
 #
 # Completely cron-job-aware, runs even with "PATH=/usr/bin"
 #
-# Time-stamp: <98/07/02 12:32:30 lange>
-# $Id: SetPerms,v 1.16 1998/07/02 10:32:28 lange Exp $
+# Time-stamp: <98/08/12 17:22:30 lange>
+# $Id: SetPerms,v 1.17 1998/08/12 15:26:33 lange Exp $
 #
 PROG=`basename $0`
 
@@ -35,6 +35,9 @@ fi
 for f in $dirs
 do
     case $f in
+
+###############################################################################
+
     *CVS/epics* | *CVS/epics/base* | */CVS/epics/extensions* | */CVS/epics/templates* | */CVS/IOC* | */CVS/OPI* | */CVS/RulesFiles* )
 
 # Set everything to group epics and ???r-X---
@@ -51,7 +54,13 @@ do
 
 	find $f/ -type d -user $USER | xargs chmod u=rwx,g=rwx,o=rx 2>/dev/null
 
+# Set all fileattr g+w
+
+	find $f/ -user $USER -name fileattr | xargs chmod g+w 2>/dev/null
+
 	;;
+
+###############################################################################
 
     *CVS/mCAN*)
 
@@ -69,7 +78,13 @@ do
 
 	find $f/ -type d -user $USER | xargs chmod u=rwx,g=rwx,o=rx  2>/dev/null
 
+# Set all fileattr g+w
+
+	find $f/ -user $USER -name fileattr | xargs chmod g+w 2>/dev/null
+
 	;;
+
+###############################################################################
 
     *CVS/medmPanels/*)
 
@@ -87,13 +102,19 @@ do
 
 	find $f/ -type d -user $USER | xargs chmod u=rwx,g=rwx,o=rx  2>/dev/null
 
+# Set all fileattr g+w
+
+	find $f/ -user $USER -name fileattr | xargs chmod g+w 2>/dev/null
+
 	;;
 
-    */epics/base* | */epics/extensions* | */epics/local*)
+###############################################################################
+
+    */vw/* | */epics/base* | */epics/extensions* | */epics/local*)
 
 # Set everything to group epics and ???r-X---
 
-	echo EPICS tree: $f
+	echo EPICS/vxWorks  tree: $f
 	echo Setting everything to group epics and mode ???r-X--- ...
 		       
 	chgrp -R epics $f/* > /dev/null 2>&1
@@ -111,18 +132,10 @@ do
        
 # Make config files etc. world readable
 
-	if [ -d $f/config ]; then
+	if echo $f | grep -q "/config\|/dbd\|/include\|/lib\|/lib_sl\|/templates"; then
 	  echo Making config, dbd, include and lib files world readable ...
-		       
-	  chmod -R o+r $f/config $f/dbd $f/include $f/lib $f/lib_sl > /dev/null 2>&1
+          chmod -R o+r $f/* > /dev/null 2>&1
 	fi
-
-# Make template files world readable
-
-	if echo $f | grep -q "base.*/templates"; then
-	  echo Making template files world readable ...
-	  chmod -R o+r $f/* > /dev/null 2>&1
-        fi
 
 # Make binary executables unreadable for others
 
@@ -133,6 +146,8 @@ do
 
 	;;
   
+###############################################################################
+
     */csr/capfast*)
 
 # Set everything to group epics and ???r-Xr-X
@@ -162,6 +177,8 @@ do
 
 	;;
   
+###############################################################################
+
   */epics/templates*)
 
 # Set everything to group epics and ???r-Xr-X
@@ -183,6 +200,8 @@ do
 	fi
 	;;
   
+###############################################################################
+
   */epics/config*)
 	   
 	echo Setting everything to group epics and mode ???r-X--- ...
@@ -191,6 +210,8 @@ do
 	chmod g=rX,o= $f/* > /dev/null 2>&1
 
 	;;
+
+###############################################################################
 
     */htdocs*)
 
@@ -209,6 +230,8 @@ do
 	find $f/ -type d -user $USER | xargs chmod u=rwx,g=rwx,o=rx 2>/dev/null
 
 	;;
+
+###############################################################################
 
   *)
 	echo Not in EPICS or CapFast or Web Tree.
