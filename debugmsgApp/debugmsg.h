@@ -13,12 +13,15 @@
  *
  * Author(s):	Ralph Lange
  *
- * $Revision: 1.6 $
- * $Date: 1997/02/07 22:45:04 $
+ * $Revision: 1.7 $
+ * $Date: 1997/02/11 18:59:23 $
  *
  * $Author: lange $
  *
  * $Log: debugmsg.h,v $
+ * Revision 1.7  1997/02/11 18:59:23  lange
+ * Beautified.
+ *
  * Revision 1.6  1997/02/07 22:45:04  lange
  * += rcsid
  *
@@ -32,19 +35,16 @@
  * Changed definition of logMsg to be somewhat compatible with vxWorks
  * (logLib.h).
  *
- * Revision 1.2  1996/10/30 10:58:49  lange
- * New version (version mismatch).
- *
  * Revision 1.2  1996/07/19 13:15:41  lange
  * DEBUG -> DEBUGMSG.
  *
  * Revision 1.1  1996/06/24 18:30:39  lange
  * New debug macros.
  *
- *
- * Copyright (c) 1996  Berliner Elektronenspeicherring-Gesellschaft
- *                           fuer Synchrotronstrahlung m.b.H.,
- *                                   Berlin, Germany
+ * Copyright (c) 1996, 1997
+ *			Berliner Elektronenspeicherring-Gesellschaft
+ *			      fuer Synchrotronstrahlung m.b.H.,
+ *				     Berlin, Germany
  *
  **************************************************************************-*/
 
@@ -67,7 +67,7 @@ extern void prefix##SetDebug (char);
 void prefix##SetDebug (char verb)						\
 {										\
 static char									\
-rcsid[] = "@(#)DEBUG: $Id: debugmsg.h,v 1.6 1997/02/07 22:45:04 lange Exp $";	\
+rcsid[] = "@(#)DEBUG: $Id: debugmsg.h,v 1.7 1997/02/11 18:59:23 lange Exp $";	\
 										\
    DBG_INIT;									\
    dbg_level = verb;								\
