@@ -35,9 +35,9 @@
 /*@EM("    /@   RCS-properties of the underlying source csmbase.c   @/\n")@IT*/   
     
 /* Author:              $Author: pfeiffer $
-   check-in date:       $Date: 2004/04/22 12:16:53 $
+   check-in date:       $Date: 2004/04/27 10:15:02 $
    locker of this file: $Locker:  $
-   Revision:            $Revision: 1.6 $
+   Revision:            $Revision: 1.7 $
    State:               $State: Exp $
 */
    
@@ -172,8 +172,10 @@ Version 0.96:
 
 /*! \internal \brief compability macro, needed when DBG is not used */
 #define DBG_MSG_PRINTF2(f,x) logMsg(f,x,0,0,0,0,0)
+
 /*! \internal \brief compability macro, needed when DBG is not used */
 #define DBG_MSG_PRINTF3(f,x,y) logMsg(f,x,y,0,0,0,0)
+
 /*! \internal \brief compability macro, needed when DBG is not used */
 #define DBG_MSG_PRINTF4(f,x,y,z) logMsg(f,x,y,z,0,0,0)
 
@@ -297,9 +299,9 @@ typedef enum { CSM_NOTHING,  /*!< kind of NULL value */
 
 /*! \internal \brief typedef-struct: compound type for functions */
 typedef struct 
-  { SEM_ID   semaphore;
-    double   last;
-    csm_bool on_hold; 
+  { SEM_ID   semaphore;   /*!< semaphore to lock access to csm_Function */
+    double   last;        /*!< last value that was calculated */
+    csm_bool on_hold;     /*!< when TRUE, just return last */
     csm_func_type type;   /*!< the type of the function */
     
     union { csm_linear_function    lf;   /*!< linear function */
@@ -848,6 +850,7 @@ printf(" ret: %f\n",
   function returns 0
   \param f pointer to the function object
   \param y the value of y 
+  \return x
 */
 
 /*@EX(1)*/
@@ -890,6 +893,7 @@ double csm_x(csm_function *f, double y)
   function returns 0
   \param f pointer to the function object
   \param x the value of x 
+  \return y
 */
 
 /*@EX(1)*/
@@ -933,6 +937,7 @@ double csm_y(csm_function *f, double x)
   returns 0.
   \param f pointer to the function object
   \param y the given delta-y
+  \return delta-x
 */
 
 /*@EX(1)*/
@@ -966,6 +971,7 @@ double csm_dx(csm_function *f, double y)
   returns 0.
   \param f pointer to the function object
   \param x the given delta-x
+  \return delta-y
 */
 
 /*@EX(1)*/
@@ -999,6 +1005,7 @@ double csm_dy(csm_function *f, double x)
   \param f pointer to the function object
   \param x the value of x
   \param y the value of y 
+  \return z
 */
 
 /*@EX(1)*/
@@ -1144,6 +1151,7 @@ csm_bool csm_def_linear_offset(csm_function *f, double a)
   file. 
   \param filename the name of the file
   \param fu pointer to the function object
+  \return returns CSM_FALSE in case of an error, CSM_TRUE otherwise
 */
 
 /*@EX(1)*/
@@ -1238,6 +1246,7 @@ csm_bool csm_read_1d_table(char *filename, csm_function *fu)
   file. 
   \param filename the name of the file
   \param fu pointer to the function object
+  \return returns CSM_FALSE in case of an error, CSM_TRUE otherwise
 */
 
 /*@EX(1)*/
@@ -1504,6 +1513,7 @@ void csm_pr_2d_table(csm_2d_functiontable *ft)
       };   	   
   }
   
+/*@EX(1)*/
 void csm_pr_func(csm_function *f)
   { csm_Function *func= (csm_Function *)f;
 
