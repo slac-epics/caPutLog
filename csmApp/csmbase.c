@@ -35,9 +35,9 @@
 /*@EM("    /@   RCS-properties of the underlying source csmbase.c   @/\n")@IT*/   
     
 /* Author:              $Author: franksen $
-   check-in date:       $Date: 2004/03/19 13:32:42 $
+   check-in date:       $Date: 2004/04/01 11:52:22 $
    locker of this file: $Locker:  $
-   Revision:            $Revision: 1.2 $
+   Revision:            $Revision: 1.3 $
    State:               $State: Exp $
 */
    
@@ -115,22 +115,6 @@ Version 0.96:
 
 #define _INCLUDE_POSIX_SOURCE
 
-/* the following macros affect the debug (dbg) module: */
-#define DBG_ASRT_COMP 0 
-/* 1: compile assertions */
-
-#define DBG_MSG_COMP 0 
-/* 1: compile debug_messages */
-
-#define DBG_TRC_COMP  0
-/* 1: compile trace-messages */
-
-#define DBG_LOCAL_COMP 1
-/* use local switch-variables for the dbg module */
-
-#define DBG_ASYNC_COMP 0
-/* use async. I/O via message passing */
-
 /* the following defines are for sci-debugging, they do not influence
    any header-files but are placed here since they are usually changed 
    together with the above macros.*/
@@ -149,26 +133,22 @@ Version 0.96:
 /*			 Include-Files			      */
 /*____________________________________________________________*/
 
-#include <basic.h> /*@IL*/
-
-
 #ifdef B_VXWORKS
 #include <vxWorks.h>
 #endif
 
-/* include files for epics subroutine-support: */
-#include <dbDefs.h>
-#include <subRecord.h>
-#include <dbCommon.h>
-#include <recSup.h>
+/* epics include files... */
+#include <errlog.h>
 /* ... until here ! */
-
-
-#include <dbg.h>     
 
 #include <stdlib.h>
 #include <stdio.h>    /*@IL*/
 #include <string.h>
+
+#define error_msg(format, args...)\
+  errlogSevPrintf(errlogFatal, "%s: " format "\n", __FUNCTION__, ## args)
+#define warning_msg(format, args...)\
+  errlogSevPrintf(errlogMinor, "%s: " format "\n", __FUNCTION__, ## args)
 
 /*@ITI________________________________________________________*/
 /*                          Types                             */
@@ -181,6 +161,12 @@ Version 0.96:
         /*\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
         /*                  public                    */
         /*@IT\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
+
+#ifdef boolean
+#error "Oops, boolean is already defined as a macro!"
+#endif
+
+typedef int boolean;
 
 typedef struct
   { double value;
@@ -254,31 +240,6 @@ typedef struct
 
 
     /*----------------------------------------------------*/
-    /*                 debug - managment                  */
-    /*----------------------------------------------------*/
-
-        /*/////////////////////////////////////////// */
-        /*                 private                    */
-        /*/////////////////////////////////////////// */
-
-static void csmbase_dbg_init(void)
-  { static boolean csmbase_init= FALSE;
-
-    if (csmbase_init)
-      return;
-    csmbase_init= TRUE;
-    /* initialize the debug (dbg) module: use stdout for error-output */
-    DBG_SET_OUT(CSMBASE_OUT_FILE);
-    DBG_TRC_LEVEL= CSMBASE_TRC_LEVEL;
-                           /* level 6: dense traces for debugging
-                              level 5: enter/exit tracing
-                              level 2: output less severe errors and warnings
-                              level 1: output of severe errors
-                              level 0: no output */
-    DBG_FLUSHMODE(CSMBASE_FLUSHMODE);
-  }
-
-    /*----------------------------------------------------*/
     /*                 linear conversion                  */
     /*----------------------------------------------------*/
 
@@ -313,8 +274,7 @@ static boolean init_coordinates(csm_coordinates *c, int elements)
     c->no_of_elements= elements;
     c->initial= TRUE;
     if (NULL== (c->coordinate= malloc(sizeof(csm_coordinate)*elements)))
-      { DBG_MSG_PRINTF2("error in IDCP:csm:init_coordinates line %d,\n" \
-                        "malloc failed!\n", __LINE__)
+      { error_msg("malloc failed");
         return(FALSE);
       };
     for(i=elements, co= c->coordinate; i>0; i--, (*(co++)).value= 0);
@@ -328,8 +288,7 @@ static boolean resize_coordinates(csm_coordinates *c, int elements)
     c->no_of_elements= elements;
     if (NULL== (c->coordinate= realloc(c->coordinate,
                                        sizeof(csm_coordinate)*elements)))
-      { DBG_MSG_PRINTF2("error in IDCP:csm:resize_coordinates line %d,\n" \
-                        "realloc failed!\n", __LINE__)
+      { error_msg("realloc failed");
         return(FALSE);
       };
     return(TRUE);
@@ -340,8 +299,7 @@ static boolean init_matrix(double **z, int rows, int columns)
     double *zp;
     
     if (NULL== (zp= malloc((sizeof(double))*rows*columns)))
-      { DBG_MSG_PRINTF2("error in IDCP:csm:init_matrix line %d,\n" \
-                        "malloc failed!\n", __LINE__)
+      { error_msg("malloc failed");
         return(FALSE);
       };
     *z = zp;
@@ -425,9 +383,7 @@ static int coordinate_lookup_index(csm_coordinates *coords,double x,
     *a= 0; *b=0;
     if (coords->no_of_elements<2)
       { if (coords->no_of_elements<1)
-          { 
-            DBG_MSG_PRINTF2("error in IDCP:csm:coordinate_lookup_index %d,\n" \
-                            "table has less than 1 element!\n", __LINE__);
+          { error_msg("table has less than 1 element");
             return(-1);
            };
         coords->a_last= 0; coords->b_last= 0; coords->x_last= x; 
@@ -787,8 +743,8 @@ boolean csm_read_table(FILE *f, csm_function *func, long len, double x_start)
     
     for(i=0;(len>0) && (NULL!=fgets(line, 127, f)); len--)
       { if (2!=sscanf(line, " %lf %lf", &(xc->value), &(yc->value)))
-          { printf("warning[%s:%d]: the following line of the data-file "
-	           "was not understood:\n%s\n", __FILE__,__LINE__,line);
+          { warning_msg("the following line of the data-file "
+                        "was not understood:\n%s\n", line);
 	    continue;
           };
 	xc->index= i; 
@@ -839,11 +795,11 @@ x2  z21  z22  z23 ...
     if (columns<1)
       return(FALSE);
     if (NULL==(buffer= malloc(sizeof(double)*(columns+1))))
-      { DBG_MSG_PRINTF2("MALLOC FAILED in file %s\n",__FILE__);
+      { error_msg("malloc failed");
         return(FALSE);
       };
     if (columns!= (i= strdoublescan(line, buffer, columns)))
-      { printf("unexpected err in line %d in file %s\n",__LINE__,__FILE__);
+      { error_msg("unexpected error");
         return(FALSE);
       };
       
@@ -884,8 +840,8 @@ x2  z21  z22  z23 ...
     for(i=0; (lines>0) && (NULL!=fgets(line, 1024, f)); lines--)
       { 
         if (columns+1 != strdoublescan(line, buffer, columns+1))
-          { printf("warning[%s:%d]: the following line of the data-file "
-	           "was not understood:\n%s\n", __FILE__,__LINE__,line);
+          { warning_msg("the following line of the data-file "
+              "was not understood:\n%s\n", line);
 	    continue;
 	  };  	   
 
@@ -908,10 +864,6 @@ x2  z21  z22  z23 ...
     return(TRUE);
   } 
 
-/*@EX(1)*/
-void csmbase_init(void)
-  { csmbase_dbg_init(); }
-  
 /*@EX(1)*/
 void csmbase_func_init(csm_function *f)
   { f->type= CSM_NOTHING; }
