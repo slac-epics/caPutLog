@@ -35,9 +35,9 @@
 /*@EM("    /@   RCS-properties of the underlying source csmbase.c   @/\n")@IT*/   
     
 /* Author:              $Author: pfeiffer $
-   check-in date:       $Date: 2004/04/27 10:50:06 $
+   check-in date:       $Date: 2004/04/27 11:01:50 $
    locker of this file: $Locker:  $
-   Revision:            $Revision: 1.10 $
+   Revision:            $Revision: 1.11 $
    State:               $State: Exp $
 */
    
@@ -1219,7 +1219,7 @@ csm_bool csm_read_1d_table(char *filename, csm_function *fu)
 	    fclose(f);                
 	    reinit_function(fu);
             func->on_hold= CSM_FALSE;
-            DBG_MSG_PRINTF4("error[%s:%d]: too many errors in file\n", 
+            DBG_MSG_PRINTF3("error[%s:%d]: too many errors in file\n", 
 			  __FILE__,__LINE__);
             return(CSM_FALSE); 
           };
@@ -1231,7 +1231,7 @@ csm_bool csm_read_1d_table(char *filename, csm_function *fu)
       { fclose(f);                
 	reinit_function(fu);
         func->on_hold= CSM_FALSE;
-        DBG_MSG_PRINTF4("error[%s:%d]: no data was found at all\n", 
+        DBG_MSG_PRINTF3("error[%s:%d]: no data was found at all\n", 
 		      __FILE__,__LINE__);
         return(CSM_FALSE); 
       };
@@ -1387,7 +1387,7 @@ x2  z21  z22  z23 ...
 	    fclose(f);                
 	    reinit_function(fu);
             func->on_hold= CSM_FALSE;
-            DBG_MSG_PRINTF4("error[%s:%d]: too many errors in file\n", 
+            DBG_MSG_PRINTF3("error[%s:%d]: too many errors in file\n", 
 			  __FILE__,__LINE__);
             return(CSM_FALSE); 
 	  };  	   
@@ -1407,7 +1407,7 @@ x2  z21  z22  z23 ...
       	reinit_function(fu);
         fclose(f);                
         func->on_hold= CSM_FALSE;
-        DBG_MSG_PRINTF4("error[%s:%d]: no data was found at all\n", 
+        DBG_MSG_PRINTF3("error[%s:%d]: no data was found at all\n", 
 		      __FILE__,__LINE__);
         return(CSM_FALSE); 
       };
