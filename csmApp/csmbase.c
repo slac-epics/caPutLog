@@ -35,9 +35,9 @@
 /*@EM("    /@   RCS-properties of the underlying source csmbase.c   @/\n")@IT*/   
     
 /* Author:              $Author: pfeiffer $
-   check-in date:       $Date: 2004/04/22 12:09:30 $
+   check-in date:       $Date: 2004/04/22 12:16:53 $
    locker of this file: $Locker:  $
-   Revision:            $Revision: 1.5 $
+   Revision:            $Revision: 1.6 $
    State:               $State: Exp $
 */
    
@@ -1143,7 +1143,7 @@ csm_bool csm_def_linear_offset(csm_function *f, double a)
   This function reads a one-dimensional function-table from a 
   file. 
   \param filename the name of the file
-  \param f pointer to the function object
+  \param fu pointer to the function object
 */
 
 /*@EX(1)*/
@@ -1237,7 +1237,7 @@ csm_bool csm_read_1d_table(char *filename, csm_function *fu)
   This function reads a two-dimensional function-table from a 
   file. 
   \param filename the name of the file
-  \param f pointer to the function object
+  \param fu pointer to the function object
 */
 
 /*@EX(1)*/
