@@ -1,0 +1,11 @@
+# Makefile.Unix
+TOP = ../..
+include $(TOP)/config/CONFIG_APP
+#-----------------------------------------------
+#  ADD MACRO DEFINITIONS AFTER THIS LINE
+
+SCRIPTS += SetPerms
+
+include $(TOP)/config/RULES.Unix
+#-----------------------------------------------
+#  ADD RULES AFTER THIS LINE
