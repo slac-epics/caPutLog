@@ -35,9 +35,9 @@
 /*@EM("    /@   RCS-properties of the underlying source csmbase.c   @/\n")@IT*/   
     
 /* Author:              $Author: franksen $
-   check-in date:       $Date: 2004/09/17 10:49:11 $
+   check-in date:       $Date: 2004/09/17 10:52:07 $
    locker of this file: $Locker:  $
-   Revision:            $Revision: 1.18 $
+   Revision:            $Revision: 1.19 $
    State:               $State: Exp $
 */
    
@@ -331,7 +331,7 @@ struct csm_Function
 
 /*! \brief typedef-struct: the abstract csm function object */
 /*@IT*/
-/typedef struct csm_Function csm_function;
+typedef struct csm_Function csm_function;
 /*@ET*/
 
 /*____________________________________________________________*/
