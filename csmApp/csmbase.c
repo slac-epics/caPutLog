@@ -35,9 +35,9 @@
 /*@EM("    /@   RCS-properties of the underlying source csmbase.c   @/\n")@IT*/   
     
 /* Author:              $Author: pfeiffer $
-   check-in date:       $Date: 2004/04/27 11:01:50 $
+   check-in date:       $Date: 2004/04/27 11:07:12 $
    locker of this file: $Locker:  $
-   Revision:            $Revision: 1.11 $
+   Revision:            $Revision: 1.12 $
    State:               $State: Exp $
 */
    
@@ -402,7 +402,7 @@ static csm_bool alloc_coordinates(csm_coordinates *c, int elements)
   { int i;
     csm_coordinate *co;
   
-    if (c->no_of_elements=0) /* 1st time memory allocation */
+    if (c->no_of_elements==0) /* 1st time memory allocation */
       c->coordinate= malloc(sizeof(csm_coordinate)*elements);
     else  
       c->coordinate= realloc(c->coordinate,
