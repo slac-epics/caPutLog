@@ -3,13 +3,13 @@
 # Sets file permissions in an EPICS directory tree
 #
 # Time-stamp: <97/02/07 20:39:57 lange>
-# $Id: SetPerms,v 1.2 1997/02/11 19:01:41 lange Exp $
+# $Id: SetPerms,v 1.3 1997/02/11 19:37:57 lange Exp $
 #
 
 # Exit if not in .../base or .../extensions or .../csr/capfast (I *love* shell programming)
 
 case `pwd` in
-  *CVS/epics | *CVS/epics/base | */CVS/epics/extensions | */CVS/epics/templates)
+  *CVS/epics | *CVS/epics/base | */CVS/epics/extensions | */CVS/epics/templates | */CVS/IOC)
 
 # Set everything to group epics and ???r-X---
 
