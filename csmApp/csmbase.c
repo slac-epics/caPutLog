@@ -34,10 +34,10 @@
 
 /*@EM("    /@   RCS-properties of the underlying source csmbase.c   @/\n")@IT*/   
     
-/* Author:              $Author: franksen $
-   check-in date:       $Date: 2004/09/17 10:52:07 $
+/* Author:              $Author: pfeiffer $
+   check-in date:       $Date: 2004/11/08 11:15:30 $
    locker of this file: $Locker:  $
-   Revision:            $Revision: 1.19 $
+   Revision:            $Revision: 1.20 $
    State:               $State: Exp $
 */
    
@@ -158,7 +158,7 @@ Version 0.96:
 #define DBG_LOCAL_COMP 1
 
 /*! \brief use async. I/O with message passing in DBG module*/
-#define DBG_ASYNC_COMP 0
+#define DBG_ASYNC_COMP 1
 
 /* the following defines are for sci-debugging, they do not influence
    any header-files but are placed here since they are usually changed 
