@@ -4,8 +4,8 @@
 #
 # Completely cron-job-aware, runs even with "PATH=/usr/bin"
 #
-# Time-stamp: <99/02/02 18:37:49 lange>
-# $Id: SetPerms,v 1.18 1999/02/02 17:40:07 lange Exp $
+# Time-stamp: <99/05/20 17:02:29 lange>
+# $Id: SetPerms,v 1.19 2001/12/18 18:21:09 franksen Exp $
 #
 PROG=`basename $0`
 
@@ -38,11 +38,11 @@ do
 
 ###############################################################################
 
-    *CVS/epics* | *CVS/epics/base* | */CVS/epics/extensions* | */CVS/epics/templates* | */CVS/IOC* | */CVS/OPI* | */CVS/RulesFiles* )
+    *CVS/epics* | *CVS/support* | *CVS/ioc* | *CVS/IOC* | *CVS/OPI* | *CVS/RulesFiles* )
 
 # Set everything to group epics and ???r-X---
 
-	echo EPICS repository: $f
+	echo EPICS related repository: $f
 	echo Setting everything to group epics and mode ???r-X--- ...
 		       
 	chgrp -R epics $f/* > /dev/null 2>&1
@@ -52,11 +52,11 @@ do
 
 	echo Setting all directories to mode rwxrwxr-x ...
 
-	find $f/ -type d -user $USER | xargs chmod u=rwx,g=rwx,o=rx 2>/dev/null
+	find $f/ -type d -follow -user $USER | xargs chmod u=rwx,g=rwx,o=rx 2>/dev/null
 
 # Set all fileattr g+w
 
-	find $f/ -user $USER -name fileattr | xargs chmod g+w 2>/dev/null
+	find $f/ -follow -user $USER -name fileattr | xargs chmod g+w 2>/dev/null
 
 	;;
 
@@ -76,11 +76,11 @@ do
 
 	echo Setting all directories to mode rwxrwxr-x ...
 
-	find $f/ -type d -user $USER | xargs chmod u=rwx,g=rwx,o=rx  2>/dev/null
+	find $f/ -type d -follow -user $USER | xargs chmod u=rwx,g=rwx,o=rx  2>/dev/null
 
 # Set all fileattr g+w
 
-	find $f/ -user $USER -name fileattr | xargs chmod g+w 2>/dev/null
+	find $f/ -follow -user $USER -name fileattr | xargs chmod g+w 2>/dev/null
 
 	;;
 
@@ -100,56 +100,17 @@ do
 
 	echo Setting all directories to mode rwxrwxr-x ...
 
-	find $f/ -type d -user $USER | xargs chmod u=rwx,g=rwx,o=rx  2>/dev/null
+	find $f/ -type d -follow -user $USER | xargs chmod u=rwx,g=rwx,o=rx  2>/dev/null
 
 # Set all fileattr g+w
 
-	find $f/ -user $USER -name fileattr | xargs chmod g+w 2>/dev/null
+	find $f/ -follow -user $USER -name fileattr | xargs chmod g+w 2>/dev/null
 
 	;;
 
 ###############################################################################
 
-    */vw/* | */epics/base* | */epics/extensions* )
-
-# Set everything to group epics and ???r-X---
-
-	echo EPICS/vxWorks  tree: $f
-	echo Setting everything to group epics and mode ???r-X--- ...
-		       
-	chgrp -R epics $f/* > /dev/null 2>&1
-	chmod -R g=rX,o= $f/* > /dev/null 2>&1
-		       
-# Set all directories and executables to group epima and mode rwxrwxr-x
-
-	echo Setting all directories and executables to group epima and mode rwxrwxr-x ...
-
-	files=`find $f/ -user $USER -a \( -type d -o -type f -perm +111 \)`
-	if [ -n "$files" ]; then
-	    echo $files | xargs chmod u=rwx,g=rwx,o=rx
-	    echo $files | xargs chgrp epima
-	fi
-       
-# Make config files etc. world readable
-
-	files=`find . -type d | grep "/config\|/dbd\|/include\|/lib\|/lib_sl\|/templates" | grep -v "/src/"`
-	if [ -n "$files" ]; then
-	  echo Making config, dbd, include and lib files world readable ...
-          echo $files | xargs chmod -R o+r $f > /dev/null 2>&1
-	fi
-
-# Make binary executables unreadable for others
-
-	echo Making binary executables unreadable for others...
-		       
-	find $f/ -type f -perm +111 -user $USER \
-	 -exec /bin/sh -c "chmod g-w {}; file {} | grep -q executable && chmod o-r {}" \;
-
-	;;
-  
-###############################################################################
-
-    */csr/capfast*)
+    */csr/capfast* | */epics/*/support/capfast*)
 
 # Set everything to group epics and ???r-Xr-X
 
@@ -163,7 +124,7 @@ do
 
 	echo Setting all directories and executables to group epima and mode rwxrwxr-x ...
 
-	files=`find $f/ -user $USER -a \( -type d -o -type f -perm +111 \)`
+	files=`find $f/ -follow -user $USER -a \( -type d -o -type f -perm +111 \)`
 	if [ -n "$files" ]; then
 	    echo $files | xargs chmod u=rwx,g=rwx,o=rx
 	    echo $files | xargs chgrp epima
@@ -173,7 +134,7 @@ do
 
 	echo Making binary executables unreadable for others...
 		       
-	find $f/ -type f -perm +111 -user $USER \
+	find $f/ -type f -perm +111 -follow -user $USER \
 	 -exec /bin/sh -c "chmod g-w {}; file {} | grep -q executable && chmod o-r {}" \;
 
 	;;
@@ -194,11 +155,50 @@ do
 
 	echo Setting all directories and executables to group epima and mode rwxrwxr-x ...
 		       
-	files=`find $f/ -user $USER -a \( -type d -o -type f -perm +111 \)`
+	files=`find $f/ -follow -user $USER -a \( -type d -o -type f -perm +111 \)`
 	if [ -n "$files" ]; then
 	    echo $files | xargs chmod u=rwx,g=rwx,o=rx
 	    echo $files | xargs chgrp epima
 	fi
+	;;
+  
+###############################################################################
+
+    */vw/* | */epics/*/support* | */epics/base* | */epics/extensions* )
+
+# Set everything to group epics and ???r-X---
+
+	echo EPICS/vxWorks  tree: $f
+	echo Setting everything to group epics and mode ???r-X--- ...
+		       
+	chgrp -R epics $f/* > /dev/null 2>&1
+	chmod -R g=rX,o= $f/* > /dev/null 2>&1
+		       
+# Set all directories and executables to group epima and mode rwxrwxr-x
+
+	echo Setting all directories and executables to group epima and mode rwxrwxr-x ...
+
+	files=`find $f/ -follow -user $USER -a \( -type d -o -type f -perm +111 \)`
+	if [ -n "$files" ]; then
+	    echo $files | xargs chmod u=rwx,g=rwx,o=rx
+	    echo $files | xargs chgrp epima
+	fi
+       
+# Make config files etc. world readable
+
+	files=`find $f/ -follow -type d | grep "/config\|/dbd\|/include\|/lib\|/lib_sl\|/templates" | grep -v "/src/"`
+	if [ -n "$files" ]; then
+	  echo Making config, dbd, include and lib files world readable ...
+          echo $files | xargs chmod -R o+r $f > /dev/null 2>&1
+	fi
+
+# Make binary executables unreadable for others
+
+	echo Making binary executables unreadable for others...
+		       
+	find $f/ -type f -perm +111 -follow -user $USER \
+	 -exec /bin/sh -c "chmod g-w {}; file {} | grep -q executable && chmod o-r {}" \;
+
 	;;
   
 ###############################################################################
@@ -228,7 +228,7 @@ do
 
 	echo Setting all directories to mode rwxrwxr-x ...
 
-	find $f/ -type d -user $USER | xargs chmod u=rwx,g=rwx,o=rx 2>/dev/null
+	find $f/ -type d -follow -user $USER | xargs chmod u=rwx,g=rwx,o=rx 2>/dev/null
 
 	;;
 
