@@ -34,10 +34,10 @@
 
 /*@EM("    /@   RCS-properties of the underlying source csmbase.c   @/\n")@IT*/   
     
-/* Author:              $Author: pfeiffer $
-   check-in date:       $Date: 2004/08/31 09:33:40 $
+/* Author:              $Author: franksen $
+   check-in date:       $Date: 2004/09/17 10:26:42 $
    locker of this file: $Locker:  $
-   Revision:            $Revision: 1.16 $
+   Revision:            $Revision: 1.17 $
    State:               $State: Exp $
 */
    
@@ -312,8 +312,8 @@ typedef enum { CSM_NOTHING,  /*!< kind of NULL value */
 	     } csm_func_type;        
 
 /*! \internal \brief typedef-struct: compound type for functions */
-typedef struct 
-  { SEM_ID   semaphore;   /*!< semaphore to lock access to csm_Function */
+struct csm_Function
+  { SEM_ID   semaphore;   /*!< semaphore to lock access to csm_function */
     double   last;        /*!< last value that was calculated */
     csm_bool on_hold;     /*!< when TRUE, just return last */
     csm_func_type type;   /*!< the type of the function */
@@ -322,19 +322,16 @@ typedef struct
             csm_1d_functiontable   tf_1; /*!< 1d function table */
             csm_2d_functiontable   tf_2; /*!< 2d function table */
 	  } f;            /*!< union that holds the actual data */
-  } csm_Function;
+
+  };
+/*@IT*/
+typedef struct csm_Function csm_function;
+/*@ET*/
 
       /*................................................*/
       /*@IL       the function-object (public)          */
       /*................................................*/
 
-/*! \brief typedef-struct: the abstract csm function object */
-/*@IT*/
-typedef struct {                        
-                 char dummy; 
-               } csm_function;
-
-/*@ET*/
 
 /*____________________________________________________________*/
 /*			  Variables			      */
@@ -862,16 +859,14 @@ printf(" ret: %f\n",
   This function computes x when y is given. Note that is doesn't
   work for two-dimensional function tables. For these, the 
   function returns 0
-  \param f pointer to the function object
+  \param func pointer to the function object
   \param y the value of y 
   \return x
 */
 
 /*@EX(1)*/
-double csm_x(csm_function *f, double y)
-  { csm_Function *func= (csm_Function *)f;
-    
-    if (func->on_hold)
+double csm_x(csm_function *func, double y)
+  { if (func->on_hold)
       return(func->last);
 
     semTake(func->semaphore, WAIT_FOREVER);
@@ -905,16 +900,14 @@ double csm_x(csm_function *f, double y)
   This function computes y when x is given. Note that is doesn't
   work for two-dimensional function tables. For these, the 
   function returns 0
-  \param f pointer to the function object
+  \param func pointer to the function object
   \param x the value of x 
   \return y
 */
 
 /*@EX(1)*/
-double csm_y(csm_function *f, double x)
-  { csm_Function *func= (csm_Function *)f;
-
-    if (func->on_hold)
+double csm_y(csm_function *func, double x)
+  { if (func->on_hold)
       return(func->last);
 
     semTake(func->semaphore, WAIT_FOREVER);
@@ -949,16 +942,14 @@ double csm_y(csm_function *f, double x)
   Note that this function only works with linear functions.
   For all other types, this function
   returns 0.
-  \param f pointer to the function object
+  \param func pointer to the function object
   \param y the given delta-y
   \return delta-x
 */
 
 /*@EX(1)*/
-double csm_dx(csm_function *f, double y)
-  { csm_Function *func= (csm_Function *)f;
-
-    if (func->on_hold)
+double csm_dx(csm_function *func, double y)
+  { if (func->on_hold)
       return(func->last);
 
     semTake(func->semaphore, WAIT_FOREVER);
@@ -983,16 +974,14 @@ double csm_dx(csm_function *f, double y)
   Note that this function only works with linear functions.
   For all other types, this function
   returns 0.
-  \param f pointer to the function object
+  \param func pointer to the function object
   \param x the given delta-x
   \return delta-y
 */
 
 /*@EX(1)*/
-double csm_dy(csm_function *f, double x)
-  { csm_Function *func= (csm_Function *)f;
-
-    if (func->on_hold)
+double csm_dy(csm_function *func, double x)
+  { if (func->on_hold)
       return(func->last);
 
     semTake(func->semaphore, WAIT_FOREVER);
@@ -1016,17 +1005,15 @@ double csm_dy(csm_function *f, double x)
   This function computes z for two-dimensional function table 
   when x and y are given. For all other function types, it returns
   0.
-  \param f pointer to the function object
+  \param func pointer to the function object
   \param x the value of x
   \param y the value of y 
   \return z
 */
 
 /*@EX(1)*/
-double csm_z(csm_function *f, double x, double y)
-  { csm_Function *func= (csm_Function *)f;
-
-    if (func->on_hold)
+double csm_z(csm_function *func, double x, double y)
+  { if (func->on_hold)
       return(func->last);
 
     semTake(func->semaphore, WAIT_FOREVER);
@@ -1049,12 +1036,10 @@ double csm_z(csm_function *f, double x, double y)
     /*@IL                initialization                   */
     /*----------------------------------------------------*/
 
-      /*   initialize a csm_Function object (private)   */
+      /*   initialize a csm_function object (private)   */
 
-static void reinit_function(csm_function *f)
-  { csm_Function *func= (csm_Function *)f;
-
-    if (func->type==CSM_NOTHING)
+static void reinit_function(csm_function *func)
+  { if (func->type==CSM_NOTHING)
       { return; };
     if (func->type==CSM_1D_TABLE)
       reinit_1d_functiontable( &(func->f.tf_1) );
@@ -1126,15 +1111,12 @@ static int strdoublescan(char *st, double *d, int no_of_cols)
 */
 
 /*@EX(1)*/
-void csm_clear(csm_function *f)
-  { 
-    csm_Function *func= (csm_Function *)f;
-
-    semTake(func->semaphore, WAIT_FOREVER);
+void csm_clear(csm_function *func)
+  { semTake(func->semaphore, WAIT_FOREVER);
     func->on_hold= CSM_TRUE;
     semGive(func->semaphore);
 
-    reinit_function(f);
+    reinit_function(func);
   
     func->on_hold= CSM_FALSE;
   }
@@ -1161,22 +1143,19 @@ void csm_free(csm_function *f)
 
   This function initializes a \ref csm_function structure as
   a linear function (y= a+b*x). 
-  \param f pointer to the function object
+  \param func pointer to the function object
   \param a offset of y= a+b*x
   \param b multiplier of y= a+b*x
 */
 
 /*@EX(1)*/
-void csm_def_linear(csm_function *f, double a, double b)
+void csm_def_linear(csm_function *func, double a, double b)
   /* y= a+b*x */
-  { 
-    csm_Function *func= (csm_Function *)f;
-
-    semTake(func->semaphore, WAIT_FOREVER);
+  { semTake(func->semaphore, WAIT_FOREVER);
     func->on_hold= CSM_TRUE;
     semGive(func->semaphore);
 
-    reinit_function(f);
+    reinit_function(func);
   
     func->type= CSM_LINEAR;
     (func->f.lf).a= a;
@@ -1189,16 +1168,14 @@ void csm_def_linear(csm_function *f, double a, double b)
 
   This function re-defines the offset-factor of 
   a linear function (y= a+b*x). 
-  \param f pointer to the function object
+  \param func pointer to the function object
   \param a offset of y= a+b*x
   \return returns CSM_FALSE in case of an error, CSM_TRUE otherwise
 */
 
 /*@EX(1)*/
-csm_bool csm_def_linear_offset(csm_function *f, double a)
-  { csm_Function *func= (csm_Function *)f;
-
-    if (func->type!=CSM_LINEAR)
+csm_bool csm_def_linear_offset(csm_function *func, double a)
+  { if (func->type!=CSM_LINEAR)
       { DBG_MSG_PRINTF2("error in IDCP:csm_def_linear_offset line %d,\n" \
                         "not a linear function!\n", __LINE__);
         return(CSM_FALSE);
@@ -1216,19 +1193,18 @@ csm_bool csm_def_linear_offset(csm_function *f, double a)
   This function reads a one-dimensional function-table from a 
   file. 
   \param filename the name of the file
-  \param fu pointer to the function object
+  \param func pointer to the function object
   \return returns CSM_FALSE in case of an error, CSM_TRUE otherwise
 */
 
 /*@EX(1)*/
-csm_bool csm_read_1d_table(char *filename, csm_function *fu) 
+csm_bool csm_read_1d_table(char *filename, csm_function *func) 
 /* if len==0, the table length is determined by counting the number of lines
    in the file from the current position to it's end */
   { char line[128];
     long pos;
     long i;
     long errcount;
-    csm_Function *func= (csm_Function *)fu;
     csm_1d_functiontable *ft= &(func->f.tf_1);
     csm_coordinate *xc, *yc;
     int len;
@@ -1252,20 +1228,20 @@ csm_bool csm_read_1d_table(char *filename, csm_function *fu)
     func->on_hold= CSM_TRUE;
     semGive(func->semaphore);
     
-    reinit_function(fu);
+    reinit_function(func);
 
     init_1d_functiontable(ft);
     
     if (!alloc_coordinates(&(ft->x), len))
       { fclose(f);                
-	reinit_function(fu);
+	reinit_function(func);
         func->on_hold= CSM_FALSE;
 	return(CSM_FALSE); 
       };
 
     if (!alloc_coordinates(&(ft->y), len))
       { fclose(f);                
-	reinit_function(fu);
+	reinit_function(func);
         func->on_hold= CSM_FALSE;
 	return(CSM_FALSE); 
       };
@@ -1284,7 +1260,7 @@ csm_bool csm_read_1d_table(char *filename, csm_function *fu)
 	    if (++errcount<4)
 	      continue; 
 	    fclose(f);                
-	    reinit_function(fu);
+	    reinit_function(func);
             func->on_hold= CSM_FALSE;
             DBG_MSG_PRINTF3("error[%s:%d]: too many errors in file\n", 
 			  __FILE__,__LINE__);
@@ -1296,7 +1272,7 @@ csm_bool csm_read_1d_table(char *filename, csm_function *fu)
       };
     if (i<=0)
       { fclose(f);                
-	reinit_function(fu);
+	reinit_function(func);
         func->on_hold= CSM_FALSE;
         DBG_MSG_PRINTF3("error[%s:%d]: no data was found at all\n", 
 		      __FILE__,__LINE__);
@@ -1305,13 +1281,13 @@ csm_bool csm_read_1d_table(char *filename, csm_function *fu)
       
     if (!resize_coordinates(&(ft->x), i))
       { fclose(f);                
-	reinit_function(fu);
+	reinit_function(func);
         func->on_hold= CSM_FALSE;
         return(CSM_FALSE); 
       };
     if (!resize_coordinates(&(ft->y), i))
       { fclose(f);                
-	reinit_function(fu);
+	reinit_function(func);
         func->on_hold= CSM_FALSE;
         return(CSM_FALSE); 
       };
@@ -1332,12 +1308,12 @@ csm_bool csm_read_1d_table(char *filename, csm_function *fu)
   This function reads a two-dimensional function-table from a 
   file. 
   \param filename the name of the file
-  \param fu pointer to the function object
+  \param func pointer to the function object
   \return returns CSM_FALSE in case of an error, CSM_TRUE otherwise
 */
 
 /*@EX(1)*/
-csm_bool csm_read_2d_table(char *filename, csm_function *fu) 
+csm_bool csm_read_2d_table(char *filename, csm_function *func) 
 /* file format:
     y1   y2   y3  ..
 x1  z11  z12  z13 ...
@@ -1351,7 +1327,6 @@ x2  z21  z22  z23 ...
     long i,j,lines,errcount;
     double *buffer;
     double *zptr;
-    csm_Function *func= (csm_Function *)fu;
     csm_2d_functiontable *ft= &(func->f.tf_2);
     csm_coordinate *xc, *yc;
     FILE *f;
@@ -1390,12 +1365,12 @@ x2  z21  z22  z23 ...
     func->on_hold= CSM_TRUE;
     semGive(func->semaphore);
     
-    reinit_function(fu);
+    reinit_function(func);
     init_2d_functiontable(ft);
 
     if (!alloc_coordinates(&(ft->y), columns))
       { free(buffer);
-        reinit_function(fu);
+        reinit_function(func);
 	fclose(f); 
         func->on_hold= CSM_FALSE;
 	return(CSM_FALSE);
@@ -1416,7 +1391,7 @@ x2  z21  z22  z23 ...
     for(lines=0; NULL!=fgets(line, 1024, f); lines++);
     if (-1==fseek(f, pos, SEEK_SET))
       { free(buffer);
-        reinit_function(fu);
+        reinit_function(func);
 	fclose(f); 
         func->on_hold= CSM_FALSE;
 	return(CSM_FALSE);
@@ -1425,7 +1400,7 @@ x2  z21  z22  z23 ...
     
     if (!alloc_coordinates(&(ft->x), rows))
       { free(buffer);
-        reinit_function(fu);
+        reinit_function(func);
 	fclose(f); 
         func->on_hold= CSM_FALSE;
 	return(CSM_FALSE);
@@ -1435,7 +1410,7 @@ x2  z21  z22  z23 ...
     
     if (!init_matrix(&(ft->z), rows, columns))
       { free(buffer);
-        reinit_function(fu);
+        reinit_function(func);
 	fclose(f); 
         func->on_hold= CSM_FALSE;
 	return(CSM_FALSE);
@@ -1454,7 +1429,7 @@ x2  z21  z22  z23 ...
 	    if (++errcount<4)
 	      continue; 
 	    fclose(f);                
-	    reinit_function(fu);
+	    reinit_function(func);
             func->on_hold= CSM_FALSE;
             DBG_MSG_PRINTF3("error[%s:%d]: too many errors in file\n", 
 			  __FILE__,__LINE__);
@@ -1473,7 +1448,7 @@ x2  z21  z22  z23 ...
     
     if (i<=0)
       { free(buffer);
-      	reinit_function(fu);
+      	reinit_function(func);
         fclose(f);                
         func->on_hold= CSM_FALSE;
         DBG_MSG_PRINTF3("error[%s:%d]: no data was found at all\n", 
@@ -1484,7 +1459,7 @@ x2  z21  z22  z23 ...
     rows= i;
     if (!resize_coordinates(&(ft->x), rows))
       { free(buffer);
-        reinit_function(fu);
+        reinit_function(func);
 	fclose(f); 
         func->on_hold= CSM_FALSE;
 	return(CSM_FALSE);
@@ -1533,7 +1508,7 @@ void csm_init(void)
 
 /*@EX(1)*/
 csm_function *csm_new_function(void)
-  { csm_Function *f= malloc(sizeof(csm_Function));
+  { csm_function *f= malloc(sizeof(csm_function));
   
     if (f==NULL)
       return(NULL);
@@ -1620,10 +1595,8 @@ void csm_pr_2d_table(csm_2d_functiontable *ft)
   }
   
 /*@EX(1)*/
-void csm_pr_func(csm_function *f)
-  { csm_Function *func= (csm_Function *)f;
-
-    if (func->on_hold)
+void csm_pr_func(csm_function *func)
+  { if (func->on_hold)
       printf("function is on hold!\n");
     else
       printf("function is operational\n");
