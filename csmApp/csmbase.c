@@ -35,9 +35,9 @@
 /*@EM("    /@   RCS-properties of the underlying source csmbase.c   @/\n")@IT*/   
     
 /* Author:              $Author: franksen $
-   check-in date:       $Date: 2004/01/20 11:47:10 $
+   check-in date:       $Date: 2004/03/19 13:32:42 $
    locker of this file: $Locker:  $
-   Revision:            $Revision: 1.1 $
+   Revision:            $Revision: 1.2 $
    State:               $State: Exp $
 */
    
@@ -149,8 +149,7 @@ Version 0.96:
 /*			 Include-Files			      */
 /*____________________________________________________________*/
 
-#include <basic.h>
-
+#include <basic.h> /*@IL*/
 
 
 #ifdef B_VXWORKS

@@ -743,6 +743,7 @@ static int create_data_set(
 	int				inx;			/* i/o status 	       */
 	ULONG			ticks;
 	int				per_ticks, mon_ticks;
+	char			*dot;
 
 	if (save_restoreDebug) {
 		logMsg("create_data_set: file '%s', method %x, period %d, trig_chan '%s', mon_period %d\n",
@@ -831,8 +832,13 @@ static int create_data_set(
 	plist->monitor_period = mon_ticks;
 	/* save_file name */
 	strcpy(plist->save_file, plist->reqFile);
-	inx = 0;
-	while ((plist->save_file[inx] != 0) && (plist->save_file[inx] != '.') && (inx < 74)) inx++;
+
+	dot = strrchr(plist->save_file, '.');
+	if (dot)
+	   inx = dot - plist->save_file;
+	else
+	   inx = strlen(plist->save_file);
+
 	plist->save_file[inx] = 0;	/* truncate if necessary to leave room for ".sav" + null */
 	strcat(plist->save_file,".sav");
 	if (saveRestoreFilePath) {
