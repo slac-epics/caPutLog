@@ -2,8 +2,8 @@
 #
 # Sets file permissions in an EPICS directory tree
 #
-# Time-stamp: <97/02/07 20:39:57 lange>
-# $Id: SetPerms,v 1.3 1997/02/11 19:37:57 lange Exp $
+# Time-stamp: <97/04/11 23:52:05 lange>
+# $Id: SetPerms,v 1.4 1997/07/04 11:10:54 lange Exp $
 #
 
 # Exit if not in .../base or .../extensions or .../csr/capfast (I *love* shell programming)
@@ -17,6 +17,24 @@ case `pwd` in
 	echo Setting everything to group epics and mode ???r-X--- ...
 		       
 	chgrp -R epics * > /dev/null 2>&1
+	chmod -R g=rX,o= * > /dev/null 2>&1
+
+# Set all directories to mode rwxrwxr-x
+
+	echo Setting all directories to mode rwxrwxr-x ...
+
+	chmod u=rwx,g=rwx,o=rx `find . -type d -user $USER`
+
+	;;
+
+  *CVS/mCAN)
+
+# Set everything to group interf and ???r-X---
+
+	echo MultiCAN repository:
+	echo Setting everything to group interf and mode ???r-X--- ...
+
+	chgrp -R interf * > /dev/null 2>&1
 	chmod -R g=rX,o= * > /dev/null 2>&1
 
 # Set all directories to mode rwxrwxr-x
