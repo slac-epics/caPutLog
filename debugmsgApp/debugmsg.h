@@ -13,12 +13,15 @@
  *
  * Author(s):	Ralph Lange
  *
- * $Revision: 1.4 $
- * $Date: 1996/11/22 13:49:08 $
+ * $Revision: 1.5 $
+ * $Date: 1997/02/07 21:43:59 $
  *
  * $Author: lange $
  *
  * $Log: debugmsg.h,v $
+ * Revision 1.5  1997/02/07 21:43:59  lange
+ * SetDebug now defined without -DDEBUGMSG (prints message).
+ *
  * Revision 1.4  1996/11/22 13:49:08  lange
  * Small changes regarding DBG_INIT (now done in <mod>SetDebug).
  *
@@ -50,11 +53,12 @@
 extern "C" {
 #endif
 
-
-#ifdef DEBUGMSG
+#include <stdio.h>
 
 #define DBG_EXTERN(prefix)			\
 extern void prefix##SetDebug (char);
+
+#ifdef DEBUGMSG
 
 #define DBG_IMPLEMENT(prefix)			\
 void prefix##SetDebug (char verb)		\
@@ -209,9 +213,13 @@ static char dbg_level       = -1;
 				/* No debugging: macros empty */
 #define DBG(verb, string)
 #define PRF(verb, x)
-#define DBG_EXTERN(prefix)
 #define DBG_DECLARE
-#define DBG_IMPLEMENT(prefix)
+#define DBG_IMPLEMENT(prefix)					\
+void prefix##SetDebug (char verb)				\
+{								\
+   printf("No debug message support compiled into " #prefix	\
+	  " (use '-DDEBUGMSG' to enable).\n");			\
+}
 #define DBG_INIT
 #define DBG_ENTER_INT_CONTEXT
 #define DBG_LEAVE_INT_CONTEXT
