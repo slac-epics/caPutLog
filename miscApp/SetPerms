@@ -2,8 +2,8 @@
 #
 # Sets file permissions in an EPICS / CapFast / CVS directory tree
 #
-# Time-stamp: <97/09/24 16:14:37 lange>
-# $Id: SetPerms,v 1.7 1997/09/24 14:14:57 lange Exp $
+# Time-stamp: <97/11/19 17:21:17 lange>
+# $Id: SetPerms,v 1.8 1997/11/19 16:21:53 lange Exp $
 #
 PROG=`basename $0`
 
@@ -33,7 +33,7 @@ fi
 for f in $dirs
 do
     case $f in
-    *CVS/epics* | *CVS/epics/base* | */CVS/epics/extensions* | */CVS/epics/templates* | */CVS/IOC*)
+    *CVS/epics* | *CVS/epics/base* | */CVS/epics/extensions* | */CVS/epics/templates* | */CVS/IOC* | */CVS/OPI* | */CVS/RulesFiles* )
 
 # Set everything to group epics and ???r-X---
 
