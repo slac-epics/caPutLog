@@ -13,12 +13,15 @@
  *
  * Author(s):	Ralph Lange
  *
- * $Revision: 1.5 $
- * $Date: 1997/02/07 21:43:59 $
+ * $Revision: 1.6 $
+ * $Date: 1997/02/07 22:45:04 $
  *
  * $Author: lange $
  *
  * $Log: debugmsg.h,v $
+ * Revision 1.6  1997/02/07 22:45:04  lange
+ * += rcsid
+ *
  * Revision 1.5  1997/02/07 21:43:59  lange
  * SetDebug now defined without -DDEBUGMSG (prints message).
  *
@@ -60,12 +63,15 @@ extern void prefix##SetDebug (char);
 
 #ifdef DEBUGMSG
 
-#define DBG_IMPLEMENT(prefix)			\
-void prefix##SetDebug (char verb)		\
-{						\
-   DBG_INIT;					\
-   dbg_level = verb;				\
-   return;					\
+#define DBG_IMPLEMENT(prefix)							\
+void prefix##SetDebug (char verb)						\
+{										\
+static char									\
+rcsid[] = "@(#)DEBUG: $Id: debugmsg.h,v 1.6 1997/02/07 22:45:04 lange Exp $";	\
+										\
+   DBG_INIT;									\
+   dbg_level = verb;								\
+   return;									\
 }
 
 #ifdef vxWorks
