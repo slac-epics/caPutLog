@@ -10,6 +10,8 @@ SRCS.c += csmbase.c
 PROD += csmbase.o
 INC += csmbase.h
 
+DBDINSTALL += csm.LDOBJS
+
 #Note that the command line that builds the
 #library $(LIBNAME) may be HUGE (>3kB)
 #
