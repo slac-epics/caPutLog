@@ -1,82 +1,107 @@
-#!/bin/posix/sh
+#!/bin/sh
 #
-# Sets file permissions in an EPICS directory tree
+# Sets file permissions in an EPICS / CapFast / CVS directory tree
 #
-# Time-stamp: <97/09/24 14:55:28 lange>
-# $Id: SetPerms,v 1.5 1997/09/24 12:58:04 lange Exp $
+# Time-stamp: <97/09/24 16:12:38 lange>
+# $Id: SetPerms,v 1.6 1997/09/24 14:13:08 lange Exp $
 #
+PROG=`basename $0`
+
+USAGE="usage: $PROG [directory ...]"
+
+if [ $# = 0 ]; then
+    dirs=`pwd`
+else
+    for f
+    do
+	if [ ! -d $f ]; then
+	    echo $f is not a directory.
+	    echo $USAGE
+	    exit 1
+	else
+	    Case $f in              # Prefix relative paths with `pwd`
+	    /*) ;;
+	    *) f=`pwd`/$f ;;
+	    esac
+	    dirs="$dirs $f"
+	fi
+    done
+fi
 
 # Exit if not in .../base or .../extensions or .../csr/capfast (I *love* shell programming)
 
-case `pwd` in
-  *CVS/epics | *CVS/epics/base | */CVS/epics/extensions | */CVS/epics/templates | */CVS/IOC)
+for f in $dirs
+do
+    case $f in
+    *CVS/epics* | *CVS/epics/base* | */CVS/epics/extensions* | */CVS/epics/templates* | */CVS/IOC*)
 
 # Set everything to group epics and ???r-X---
 
-	echo EPICS repository:
+	echo EPICS repository: $f
 	echo Setting everything to group epics and mode ???r-X--- ...
 		       
-	chgrp -R epics * > /dev/null 2>&1
-	chmod -R g=rX,o= * > /dev/null 2>&1
+	chgrp -R epics $f/* > /dev/null 2>&1
+	chmod -R g=rX,o= $f/* > /dev/null 2>&1
 
 # Set all directories to mode rwxrwxr-x
 
 	echo Setting all directories to mode rwxrwxr-x ...
 
-	find . -type d -user $USER | xargs chmod u=rwx,g=rwx,o=rx
+	find $f/ -type d -user $USER | xargs chmod u=rwx,g=rwx,o=rx
 
 	;;
 
-  *CVS/mCAN)
+    *CVS/mCAN*)
 
 # Set everything to group interf and ???r-X---
 
-	echo MultiCAN repository:
+	echo MultiCAN repository: $f
 	echo Setting everything to group interf and mode ???r-X--- ...
 
-	chgrp -R interf * > /dev/null 2>&1
-	chmod -R g=rX,o= * > /dev/null 2>&1
+	chgrp -R interf $f/* > /dev/null 2>&1
+	chmod -R g=rX,o= $f/* > /dev/null 2>&1
 
 # Set all directories to mode rwxrwxr-x
 
 	echo Setting all directories to mode rwxrwxr-x ...
 
-	find . -type d -user $USER | xargs chmod u=rwx,g=rwx,o=rx 
+	find $f/ -type d -user $USER | xargs chmod u=rwx,g=rwx,o=rx 
 
 	;;
 
-  */epics/base* | */epics/extensions* | */epics/local | */csr/capfast)
+    */epics/base* | */epics/extensions* | */epics/local* | */csr/capfast*)
 
 # Set everything to group epics and ???r-X---
 
-	echo EPICS or CapFast tree:
+	echo EPICS or CapFast tree: $f
 	echo Setting everything to group epics and mode ???r-X--- ...
 		       
-	chgrp -R epics * > /dev/null 2>&1
-	chmod -R g=rX,o= * > /dev/null 2>&1
+	chgrp -R epics $f/* > /dev/null 2>&1
+	chmod -R g=rX,o= $f/* > /dev/null 2>&1
 		       
 # Set all directories and executables to group epima and mode rwxrwxr-x
 
 	echo Setting all directories and executables to group epima and mode rwxrwxr-x ...
-		       
-	files=`find . -user $USER -and \( -type d -or -type f -perm +111 \)`
-	echo $files | xargs chmod u=rwx,g=rwx,o=rx
-	echo $files | xargs chgrp epima
-	unset files
-		       
+
+	files=`find $f/ -user $USER -and \( -type d -or -type f -perm +111 \)`
+	if [ -n "$files" ]; then
+	    echo $files | xargs chmod u=rwx,g=rwx,o=rx
+	    echo $files | xargs chgrp epima
+	fi
+       
 # Make config files world readable
 
-	if [ -d config ]; then
+	if [ -d $f/config ]; then
 	  echo Making config, dbd, include and lib files world readable ...
 		       
-	  chmod -R o+r config dbd include lib lib_sl > /dev/null 2>&1
+	  chmod -R o+r $f/config $f/dbd $f/include $f/lib $f/lib_sl > /dev/null 2>&1
 	fi
 
 # Make binary executables unreadable for others
 
 	echo Making binary executables unreadable for others...
 		       
-	find . -type f -perm +111 -user $USER \
+	find $f/ -type f -perm +111 -user $USER \
 	 -exec /bin/sh -c "chmod g-w {}; file {} | grep -q executable && chmod o-r {}" \;
 
 	;;
@@ -85,28 +110,29 @@ case `pwd` in
 
 # Set everything to group epics and ???r-Xr-X
 
-	echo EPICS templates tree:
+	echo EPICS templates tree: $f
 	echo Setting everything to group epics and mode ???r-Xr-X ...
 		       
-	chgrp -R epics * > /dev/null 2>&1
-	chmod -R g=rX,o=rX * > /dev/null 2>&1
+	chgrp -R epics $f/* > /dev/null 2>&1
+	chmod -R g=rX,o=rX $f/* > /dev/null 2>&1
 		       
 # Set all directories and executables to group epima and mode rwxrwxr-x
 
 	echo Setting all directories and executables to group epima and mode rwxrwxr-x ...
 		       
-	files=`find . -user $USER -and \( -type d -or -type f -perm +111 \)`
-	chmod u=rwx,g=rwx,o=rx $files
-	chgrp epima $files
-	unset files
+	files=`find $f/ -user $USER -and \( -type d -or -type f -perm +111 \)`
+	if [ -n "$files" ]; then
+	    echo $files | xargs chmod u=rwx,g=rwx,o=rx
+	    echo $files | xargs chgrp epima
+	fi
 	;;
   
   */epics/config*)
 	   
 	echo Setting everything to group epics and mode ???r-X--- ...
 			
-	chgrp epics * > /dev/null 2>&1
-	chmod g=rX,o= * > /dev/null 2>&1
+	chgrp epics $f/* > /dev/null 2>&1
+	chmod g=rX,o= $f/* > /dev/null 2>&1
 
 	;;
 
@@ -114,6 +140,7 @@ case `pwd` in
 	echo Not in EPICS or CapFast Tree.
 	exit 1
 	;;
-esac
+    esac
+done
 
 exit 0
