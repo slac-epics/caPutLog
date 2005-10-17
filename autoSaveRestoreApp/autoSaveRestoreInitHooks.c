@@ -79,6 +79,7 @@ void autoSaveRestoreHooks(initHookState state)
 	    break;
 	case INITHOOKafterTS_init :
 
+#ifdef COMPATIBILITY
 		/* For backward compatibility with earlier versions of save_restore,
 		 * if no restore files have been specified, set things up so we do
 		 * what we used to do.
@@ -91,6 +92,7 @@ void autoSaveRestoreHooks(initHookState state)
 			set_pass0_restoreFile("auto_settings.sav");
 			set_pass1_restoreFile("auto_settings.sav");
 		}
+#endif
 
 		/* restore fields needed in init_record() */
 		for(i = 0; i < restoreFileList.pass0cnt; i++) {

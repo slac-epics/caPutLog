@@ -4,11 +4,8 @@ include $(TOP)/config/CONFIG_APP
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
-APPNAME = autoSaveRestore
-
-# The next lines are for dbd expansion
-#DBDEXPAND = autoSaveRestore.dbdInc
-#DBDNAME = autoSaveRestoreApp.dbd
+# uncomment to enable backward compatibility (default filenames)
+# USR_CFLAGS += -DCOMPATIBILITY
 
 SRCS.c += ../dbrestore.c
 SRCS.c += ../fGetDateStr.c
@@ -18,9 +15,6 @@ SRCS.c += ../save_restore.c
 PROD = $(SRCS.c:../%.c=%.o)
 DBDINSTALL += autoSaveRestore.LDOBJS
 
-#Note that the command line that builds the
-#library $(LIBNAME) may be HUGE (>3kB)
-#
 include $(TOP)/config/RULES.Vx
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
