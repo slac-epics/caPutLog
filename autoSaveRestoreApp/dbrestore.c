@@ -108,7 +108,7 @@ int reboot_restore(char *filename, initHookState init_state)
 	char		*endp;
 	int			n;
 
-	epicsPrintf("reboot_restore (v%s): entry\n", VERSION);
+	Debug("reboot_restore (v%s): entry\n", VERSION);
 	/* initialize database access routines */
 	if (!pdbbase) {
 		printf("No Database Loaded\n");
@@ -122,8 +122,11 @@ int reboot_restore(char *filename, initHookState init_state)
 		strncpy(fname, saveRestoreFilePath, sizeof(fname) -1);
 	}
 	strncat(fname, filename, MAX(sizeof(fname) -1 - strlen(fname),0));
+#if 0
 	epicsPrintf("*** restoring from '%s' at initHookState %d ***\n",
 		fname, (int)init_state);
+#endif
+	epicsPrintf("restoring from '%s'\n", fname);
 	if ((inp_fd = fopen_and_check(fname, "r")) == NULL) {
 		epicsPrintf("reboot_restore: Can't open save file.");
 		return(ERROR);
