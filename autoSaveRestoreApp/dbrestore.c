@@ -108,7 +108,7 @@ int reboot_restore(char *filename, initHookState init_state)
 	char		*endp;
 	int			n;
 
-	Debug("reboot_restore (v%s): entry\n", VERSION);
+	Debug(1,"reboot_restore (v%s): entry\n", VERSION);
 	/* initialize database access routines */
 	if (!pdbbase) {
 		printf("No Database Loaded\n");
