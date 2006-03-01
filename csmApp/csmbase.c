@@ -35,9 +35,9 @@
 /*@EM("    /@   RCS-properties of the underlying source csmbase.c   @/\n")@IT*/   
     
 /* Author:              $Author: pfeiffer $
-   check-in date:       $Date: 2006/03/01 13:42:52 $
+   check-in date:       $Date: 2006/03/01 15:30:10 $
    locker of this file: $Locker:  $
-   Revision:            $Revision: 1.21 $
+   Revision:            $Revision: 1.22 $
    State:               $State: Exp $
 */
    
@@ -112,6 +112,14 @@ Version 0.96:
 
   Date: 2006-03-01
   bugfix: semDelete was added
+
+  Date: 2006-03-01
+  * usage of psem (portable semaphores) can now be selected
+  * usage of DBG, errlogPrinf or printf can now be selected
+    define USE_DBG and USE_ERRLOGPRINTF accordingly
+  * prepared for Linux (undefine B_VXWORKS for this,
+    set USE_DBG 0, USE_ERRLOGPRINTF 0 and USE_PSEM 1
+  * memory leak error was fixed in csm_read_2d_table
 */
 
     /*----------------------------------------------------*/
@@ -135,14 +143,22 @@ Version 0.96:
 
 /*@EM("\n#ifndef __CSMBASE_H\n#define __CSMBASE_H\n") */
 
+#ifndef B_LINUX
+/*! \brief select compilation under vxWorks */
+#define B_VXWORKS
+#endif
+
 /*! \brief needed for POSIX compability */
 #define _INCLUDE_POSIX_SOURCE
 
 /*! \brief use DBG module ? */
 #define USE_DBG 0
 
-/*! \brief use epics printf ? */
-#define USE_EPICS_DBG 1
+/*! \brief use epics errlogPrintf ? */
+#define USE_ERRLOGPRINTF 1
+
+/*! \brief use psem semaphore module ? */
+#define USE_PSEM 0
 
 /* the following macros affect the debug (dbg) module: */
 
@@ -182,6 +198,10 @@ Version 0.96:
 
 #else
 
+#if !USE_ERRLOGPRINTF
+#define errlogPrintf printf
+#endif
+
 /*! \internal \brief compability macro, needed when DBG is not used */
 #define DBG_MSG_PRINTF2(f,x) errlogPrintf(f,x)
 
@@ -196,6 +216,25 @@ Version 0.96:
 
 #endif
 
+#if USE_PSEM
+#define SEM_TYPE psem_mutex
+#define SEMTAKE(x) psem_mutex_take(&(x))
+#define SEMGIVE(x) psem_mutex_give(&(x))
+#define SEMDELETE(x) psem_mutex_remove(&(x))
+#define SEMCREATE(x) (!psem_mutex_create(&(x)))
+#else
+/*! \internal \brief compability macro for semaphores */
+#define SEM_TYPE SEM_ID
+/*! \internal \brief compability macro for semaphores */
+#define SEMTAKE(x) semTake(x, WAIT_FOREVER)
+/*! \internal \brief compability macro for semaphores */
+#define SEMGIVE(x) semGive(x)
+/*! \internal \brief compability macro for semaphores */
+#define SEMDELETE(x) semDelete(x)
+/*! \internal \brief compability macro for semaphores */
+#define SEMCREATE(x) (NULL==(x= semMCreate(SEM_Q_FIFO)))
+#endif
+
 /*! \brief for type csm_bool */
 #define CSM_TRUE 1
 
@@ -208,18 +247,37 @@ Version 0.96:
 
 /* #include <basic.h> */
 
-
-
+#ifdef B_VXWORKS
 #include <vxWorks.h>
+#endif
+
+#if USE_PSEM
+#include <psem.h>
+#define SEM_TYPE psem_mutex
+#define SEMTAKE(x) psem_mutex_take(&(x))
+#define SEMGIVE(x) psem_mutex_give(&(x))
+#define SEMDELETE(x) psem_mutex_remove(&(x))
+#define SEMCREATE(x) (!psem_mutex_create(&(x)))
+#else
+/* use native vxWorks semaphores */
 #include <semaphore.h>
+#define SEM_TYPE SEM_ID
+#define SEMTAKE(x) semTake(x, WAIT_FOREVER)
+#define SEMGIVE(x) semGive(x)
+#define SEMDELETE(x) semDelete(x)
+#define SEMCREATE(x) (NULL==(x= semMCreate(SEM_Q_FIFO)))
+#endif
 
 
 #if USE_DBG
 #include <dbg.h>     
-#else
-/* #include <logLib.h> */
+#endif
+
+#if USE_ERRLOGPRINTF
 #include <errlog.h> /* epics error printf */    
 #endif
+
+
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -316,7 +374,7 @@ typedef enum { CSM_NOTHING,  /*!< kind of NULL value */
 
 /*! \internal \brief typedef-struct: compound type for functions */
 struct csm_Function
-  { SEM_ID   semaphore;   /*!< semaphore to lock access to csm_function */
+  { SEM_TYPE semaphore;   /*!< semaphore to lock access to csm_function */
     double   last;        /*!< last value that was calculated */
     csm_bool on_hold;     /*!< when TRUE, just return last */
     csm_func_type type;   /*!< the type of the function */
@@ -873,10 +931,10 @@ double csm_x(csm_function *func, double y)
   { if (func->on_hold)
       return(func->last);
 
-    semTake(func->semaphore, WAIT_FOREVER);
+    SEMTAKE(func->semaphore);
 
     if (func->on_hold)
-      { semGive(func->semaphore);
+      { SEMGIVE(func->semaphore);
         return(func->last); 
       };
 
@@ -895,7 +953,7 @@ double csm_x(csm_function *func, double y)
 	       func->last=0;
 	       break;
       };
-    semGive(func->semaphore);	  	       
+    SEMGIVE(func->semaphore);	  	       
     return(func->last);
   }
 
@@ -914,10 +972,10 @@ double csm_y(csm_function *func, double x)
   { if (func->on_hold)
       return(func->last);
 
-    semTake(func->semaphore, WAIT_FOREVER);
+    SEMTAKE(func->semaphore);
 
     if (func->on_hold)
-      { semGive(func->semaphore);
+      { SEMGIVE(func->semaphore);
         return(func->last); 
       };
 
@@ -936,7 +994,7 @@ double csm_y(csm_function *func, double x)
 	       func->last=0;
 	       break;
       };  
-    semGive(func->semaphore);	  	       
+    SEMGIVE(func->semaphore);	  	       
     return(func->last);
   }
   
@@ -956,10 +1014,10 @@ double csm_dx(csm_function *func, double y)
   { if (func->on_hold)
       return(func->last);
 
-    semTake(func->semaphore, WAIT_FOREVER);
+    SEMTAKE(func->semaphore);
 
     if (func->on_hold)
-      { semGive(func->semaphore);
+      { SEMGIVE(func->semaphore);
         return(func->last); 
       };
 
@@ -968,7 +1026,7 @@ double csm_dx(csm_function *func, double y)
     else
       func->last=0;
       
-    semGive(func->semaphore);
+    SEMGIVE(func->semaphore);
     return(func->last);
   }
 
@@ -988,10 +1046,10 @@ double csm_dy(csm_function *func, double x)
   { if (func->on_hold)
       return(func->last);
 
-    semTake(func->semaphore, WAIT_FOREVER);
+    SEMTAKE(func->semaphore);
 
     if (func->on_hold)
-      { semGive(func->semaphore);
+      { SEMGIVE(func->semaphore);
         return(func->last); 
       };
 
@@ -1000,7 +1058,7 @@ double csm_dy(csm_function *func, double x)
     else
       func->last=0;
       
-    semGive(func->semaphore);
+    SEMGIVE(func->semaphore);
     return(func->last);
   }
 
@@ -1020,10 +1078,10 @@ double csm_z(csm_function *func, double x, double y)
   { if (func->on_hold)
       return(func->last);
 
-    semTake(func->semaphore, WAIT_FOREVER);
+    SEMTAKE(func->semaphore);
   
     if (func->on_hold)
-      { semGive(func->semaphore);
+      { SEMGIVE(func->semaphore);
         return(func->last); 
       };
 
@@ -1032,7 +1090,7 @@ double csm_z(csm_function *func, double x, double y)
     else
       func->last=0;
 
-    semGive(func->semaphore);
+    SEMGIVE(func->semaphore);
     return(func->last);
   }
   
@@ -1116,9 +1174,9 @@ static int strdoublescan(char *st, double *d, int no_of_cols)
 
 /*@EX(1)*/
 void csm_clear(csm_function *func)
-  { semTake(func->semaphore, WAIT_FOREVER);
+  { SEMTAKE(func->semaphore);
     func->on_hold= CSM_TRUE;
-    semGive(func->semaphore);
+    SEMGIVE(func->semaphore);
 
     reinit_function(func);
   
@@ -1138,7 +1196,7 @@ void csm_clear(csm_function *func)
 /*@EX(1)*/
 void csm_free(csm_function *func)
   { csm_clear(func);
-    semDelete(func->semaphore);
+    SEMDELETE(func->semaphore);
     free(func);
   }
 
@@ -1156,9 +1214,9 @@ void csm_free(csm_function *func)
 /*@EX(1)*/
 void csm_def_linear(csm_function *func, double a, double b)
   /* y= a+b*x */
-  { semTake(func->semaphore, WAIT_FOREVER);
+  { SEMTAKE(func->semaphore);
     func->on_hold= CSM_TRUE;
-    semGive(func->semaphore);
+    SEMGIVE(func->semaphore);
 
     reinit_function(func);
   
@@ -1186,9 +1244,9 @@ csm_bool csm_def_linear_offset(csm_function *func, double a)
         return(CSM_FALSE);
       };
 
-    semTake(func->semaphore, WAIT_FOREVER);
+    SEMTAKE(func->semaphore);
     func->f.lf.a= a;  
-    semGive(func->semaphore);
+    SEMGIVE(func->semaphore);
 
     return(CSM_TRUE);
   } 
@@ -1229,9 +1287,9 @@ csm_bool csm_read_1d_table(char *filename, csm_function *func)
         return(CSM_FALSE); 
       };
     
-    semTake(func->semaphore, WAIT_FOREVER);
+    SEMTAKE(func->semaphore);
     func->on_hold= CSM_TRUE;
-    semGive(func->semaphore);
+    SEMGIVE(func->semaphore);
     
     reinit_function(func);
 
@@ -1366,9 +1424,9 @@ x2  z21  z22  z23 ...
 	return(CSM_FALSE);
       };
       
-    semTake(func->semaphore, WAIT_FOREVER);
+    SEMTAKE(func->semaphore);
     func->on_hold= CSM_TRUE;
-    semGive(func->semaphore);
+    SEMGIVE(func->semaphore);
     
     reinit_function(func);
     init_2d_functiontable(ft);
@@ -1471,6 +1529,7 @@ x2  z21  z22  z23 ...
       };
 
     fclose(f); 
+    free(buffer);
 
     func->type= CSM_2D_TABLE;
 
@@ -1521,8 +1580,7 @@ csm_function *csm_new_function(void)
     f->type= CSM_NOTHING;
     f->last= 0;
     f->on_hold= CSM_FALSE;
-    f->semaphore= semMCreate(SEM_Q_FIFO);
-    if (f->semaphore==NULL)
+    if (SEMCREATE(f->semaphore))
       { free(f);
         return(NULL);
       };
