@@ -11,7 +11,7 @@
 /* module: CSM-BASE                                           */
 /* version-number of module: 1.0                              */
 /* author: Goetz Pfeiffer                                     */
-/* last modification date: 2004-08-31                         */
+/* last modification date: 2006-03-01                         */
 /* status: beta-test                                          */
 /*____________________________________________________________*/
 
@@ -35,9 +35,9 @@
 /*@EM("    /@   RCS-properties of the underlying source csmbase.c   @/\n")@IT*/   
     
 /* Author:              $Author: pfeiffer $
-   check-in date:       $Date: 2004/11/08 11:15:30 $
+   check-in date:       $Date: 2006/03/01 13:42:52 $
    locker of this file: $Locker:  $
-   Revision:            $Revision: 1.20 $
+   Revision:            $Revision: 1.21 $
    State:               $State: Exp $
 */
    
@@ -109,6 +109,9 @@ Version 0.96:
   a new function, csm_free was added. This function releases all
   memory and finally releases the memory of the csm_function object
   itself.  
+
+  Date: 2006-03-01
+  bugfix: semDelete was added
 */
 
     /*----------------------------------------------------*/
@@ -1135,6 +1138,7 @@ void csm_clear(csm_function *func)
 /*@EX(1)*/
 void csm_free(csm_function *func)
   { csm_clear(func);
+    semDelete(func->semaphore);
     free(func);
   }
 
