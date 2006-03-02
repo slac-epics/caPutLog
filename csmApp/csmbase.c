@@ -35,9 +35,9 @@
 /*@EM("    /@   RCS-properties of the underlying source csmbase.c   @/\n")@IT*/   
     
 /* Author:              $Author: pfeiffer $
-   check-in date:       $Date: 2006/03/02 08:29:54 $
+   check-in date:       $Date: 2006/03/02 10:13:45 $
    locker of this file: $Locker:  $
-   Revision:            $Revision: 1.23 $
+   Revision:            $Revision: 1.24 $
    State:               $State: Exp $
 */
    
@@ -123,6 +123,9 @@ Version 0.96:
 
   Date: 2006-03-02
   cosmetic changes
+
+  Date: 2006-03-02
+  changes in the embedded documentation
 */
 
     /*----------------------------------------------------*/
@@ -146,57 +149,59 @@ Version 0.96:
 
 /*@EM("\n#ifndef __CSMBASE_H\n#define __CSMBASE_H\n") */
 
+#ifndef DOXYGEN_SKIP_THIS
+
 #ifndef B_LINUX
-/*! \brief select compilation under vxWorks */
+/*! \internal \brief select compilation under vxWorks */
 #define B_VXWORKS
 #endif
 
-/*! \brief needed for POSIX compability */
+/*! \internal \brief needed for POSIX compability */
 #define _INCLUDE_POSIX_SOURCE
 
-/*! \brief use DBG module ? */
+/*! \internal \brief use DBG module ? */
 #define USE_DBG 0
 
-/*! \brief use epics errlogPrintf ? */
+/*! \internal \brief use epics errlogPrintf ? */
 #define USE_ERRLOGPRINTF 1
 
-/*! \brief use psem semaphore module ? */
+/*! \internal \brief use psem semaphore module ? */
 #define USE_PSEM 0
 
 /* the following macros affect the debug (dbg) module: */
 
 #if USE_DBG
 
-/*! \brief compile DBG assertions */
+/*! \internal \brief compile DBG assertions */
 #define DBG_ASRT_COMP 0 
 
-/*! \brief compile DBG debug messages */
+/*! \internal \brief compile DBG debug messages */
 #define DBG_MSG_COMP 0 
 
-/*! \brief compile DBG trace messages */
+/*! \internal \brief compile DBG trace messages */
 #define DBG_TRC_COMP  0
 
-/*! \brief use local switch-variables for the dbg module */
+/*! \internal \brief use local switch-variables for the dbg module */
 #define DBG_LOCAL_COMP 1
 
-/*! \brief use async. I/O with message passing in DBG module*/
+/*! \internal \brief use async. I/O with message passing in DBG module*/
 #define DBG_ASYNC_COMP 1
 
 /* the following defines are for sci-debugging, they do not influence
    any header-files but are placed here since they are usually changed 
    together with the above macros.*/
    
-/*! \brief for debug-outputs, "stdout" means console */
+/*! \internal \brief for debug-outputs, "stdout" means console */
 #define CSMBASE_OUT_FILE "stdout"
 
-/*! \brief csm trace level
+/*! \internal \brief csm trace level
 
   \li level 6: dense traces for debugging
   \li level 5: enter/exit tracing
 */
 #define CSMBASE_TRC_LEVEL 0
 
-/*! \brief flushmode, 0, 1 and 2 are allowed */
+/*! \internal \brief flushmode, 0, 1 and 2 are allowed */
 #define CSMBASE_FLUSHMODE 1
 
 #else
@@ -236,6 +241,8 @@ Version 0.96:
 #define SEMDELETE(x) semDelete(x)
 /*! \internal \brief compability macro for semaphores */
 #define SEMCREATE(x) (NULL==(x= semMCreate(SEM_Q_FIFO)))
+#endif
+
 #endif
 
 /*! \brief for type csm_bool */
@@ -283,7 +290,7 @@ Version 0.96:
       /*@IL        the csm_bool type (public)           */
       /*................................................*/
 
-/*! \brief typedef-struct: the csm_bool data type */
+/*! \brief the boolean data type used in this module */
 
 typedef int csm_bool; /*@IL*/
 
@@ -291,14 +298,14 @@ typedef int csm_bool; /*@IL*/
       /*          the coordinate type (private)         */
       /*................................................*/
 
-/*! \internal \brief typedef-struct: a single coordinate value */ 
+/*! \internal \brief a single coordinate value */ 
 typedef struct
   { 
     double value; /*!< the floating point value of the coordinate */
     int    index; /*!< the index-number within this list of coordinates */
   } csm_coordinate;
   
-/*! \internal \brief typedef-struct: a list of coordinates */ 
+/*! \internal \brief a list of coordinates */ 
 typedef struct
   { csm_coordinate *coordinate;  /*!< pointer to coordinate array */
     int            no_of_elements;
@@ -317,7 +324,7 @@ typedef struct
       /*        the linear function type (private)      */
       /*................................................*/
 
-/*! \internal \brief typedef-struct: a linear function y = a + b*x */
+/*! \internal \brief a linear function y = a + b*x */
 typedef struct
   { double a;  
     double b; 
@@ -327,7 +334,7 @@ typedef struct
       /*           the 1d table type (private)          */
       /*................................................*/
 
-/*! \internal \brief typedef-struct: one-dimenstional function table 
+/*! \internal \brief one-dimenstional function table 
 
   This is a list of x-y pairs that define a one-dimensional 
   function. The function can be inverted, if it is monotone.
@@ -341,7 +348,7 @@ typedef struct
       /*          the 2d table type (private)           */
       /*................................................*/
 
-/*! \internal \brief typedef-struct: two-dimenstional function table 
+/*! \internal \brief two-dimenstional function table 
 
   This is a list of x-y pairs and corresponding z-values that 
   define a two-dimensional function table. The function cannot be inverted.
@@ -356,14 +363,16 @@ typedef struct
       /*           the function-type (private)          */
       /*................................................*/
 
+#ifndef DOXYGEN_SKIP_THIS
 /*! \internal \brief typedef-enum: types of functions known in this module */
 typedef enum { CSM_NOTHING,  /*!< kind of NULL value */
                CSM_LINEAR,   /*!< linear y=a+b*x */
                CSM_1D_TABLE, /*!< one-dimensional function table */
 	       CSM_2D_TABLE  /*!< two-dimensional function table */
 	     } csm_func_type;        
+#endif
 
-/*! \internal \brief typedef-struct: compound type for functions */
+/*! \internal \brief compound type for functions */
 struct csm_Function
   { SEM_TYPE semaphore;   /*!< semaphore to lock access to csm_function */
     double   last;        /*!< last value that was calculated */
@@ -381,7 +390,7 @@ struct csm_Function
       /*@IL       the function-object (public)          */
       /*................................................*/
 
-/*! \brief typedef-struct: the abstract csm function object */
+/*! \brief the abstract csm function object */
 /*@IT*/
 typedef struct csm_Function csm_function;
 /*@ET*/
@@ -1159,7 +1168,7 @@ static int strdoublescan(char *st, double *d, int no_of_cols)
 /*! \brief clear a function
 
   This function clears the \ref csm_function structure. All
-  allocated memory is released, the type is set to \ref CSM_NOTHING.
+  allocated memory is released, the internal type is set to CSM_NOTHING.
   \param func pointer to the function object
 */
 
@@ -1583,7 +1592,7 @@ csm_function *csm_new_function(void)
     /*@IL              debugging (public)                 */
     /*----------------------------------------------------*/
 
-void csm_pr_coordinates(csm_coordinates *c)
+static void csm_pr_coordinates(csm_coordinates *c)
   { int i;
     printf("no . of elements: %d\n", c->no_of_elements);
     if (c->a_last==-1)
@@ -1597,16 +1606,16 @@ void csm_pr_coordinates(csm_coordinates *c)
              i,(c->coordinate)[i].value,(c->coordinate)[i].index); 
   }
 
-void csm_pr_1d_table_elm(csm_1d_functiontable *t, int index)
+static void csm_pr_1d_table_elm(csm_1d_functiontable *t, int index)
   { printf("x: %15f   y: %15f\n", 
            ((t->x).coordinate)[index].value, 
            ((t->y).coordinate)[index].value); 
   }
 
-void csm_pr_linear(csm_linear_function *lf)
+static void csm_pr_linear(csm_linear_function *lf)
   { printf("a:%f  b:%f  (y=a+b*x)\n", lf->a, lf->b); } 
   
-void csm_pr_1d_table(csm_1d_functiontable *tf)
+static void csm_pr_1d_table(csm_1d_functiontable *tf)
   { int i;
     int l= (tf->x).no_of_elements;
   
@@ -1623,7 +1632,7 @@ void csm_pr_1d_table(csm_1d_functiontable *tf)
       csm_pr_1d_table_elm( tf, i);
   }
 
-void csm_pr_2d_table(csm_2d_functiontable *ft)
+static void csm_pr_2d_table(csm_2d_functiontable *ft)
   { int i,j;
     int rows   = ft->x.no_of_elements;
     int columns= ft->y.no_of_elements;
@@ -1648,6 +1657,12 @@ void csm_pr_2d_table(csm_2d_functiontable *ft)
       };   	   
   }
   
+/*! \brief dump a new function object
+
+  This printfs information about the given function to
+  stdout.
+  \param func pointer to the function object
+*/
 /*@EX(1)*/
 void csm_pr_func(csm_function *func)
   { if (func->on_hold)
