@@ -9,10 +9,10 @@
 /*____________________________________________________________*/
 /* project: IDCP                                              */
 /* module: CSM-BASE                                           */
-/* version-number of module: 1.0                              */
+/* version-number of module: 1.1                              */
 /* author: Goetz Pfeiffer                                     */
-/* last modification date: 2006-03-01                         */
-/* status: beta-test                                          */
+/* last modification date: 2006-03-02                         */
+/* status: tested                                             */
 /*____________________________________________________________*/
 
 /*____________________________________________________________*/
@@ -35,9 +35,9 @@
 /*@EM("    /@   RCS-properties of the underlying source csmbase.c   @/\n")@IT*/   
     
 /* Author:              $Author: pfeiffer $
-   check-in date:       $Date: 2006/03/01 15:30:10 $
+   check-in date:       $Date: 2006/03/02 08:29:54 $
    locker of this file: $Locker:  $
-   Revision:            $Revision: 1.22 $
+   Revision:            $Revision: 1.23 $
    State:               $State: Exp $
 */
    
@@ -120,6 +120,9 @@ Version 0.96:
   * prepared for Linux (undefine B_VXWORKS for this,
     set USE_DBG 0, USE_ERRLOGPRINTF 0 and USE_PSEM 1
   * memory leak error was fixed in csm_read_2d_table
+
+  Date: 2006-03-02
+  cosmetic changes
 */
 
     /*----------------------------------------------------*/
@@ -253,19 +256,9 @@ Version 0.96:
 
 #if USE_PSEM
 #include <psem.h>
-#define SEM_TYPE psem_mutex
-#define SEMTAKE(x) psem_mutex_take(&(x))
-#define SEMGIVE(x) psem_mutex_give(&(x))
-#define SEMDELETE(x) psem_mutex_remove(&(x))
-#define SEMCREATE(x) (!psem_mutex_create(&(x)))
 #else
 /* use native vxWorks semaphores */
 #include <semaphore.h>
-#define SEM_TYPE SEM_ID
-#define SEMTAKE(x) semTake(x, WAIT_FOREVER)
-#define SEMGIVE(x) semGive(x)
-#define SEMDELETE(x) semDelete(x)
-#define SEMCREATE(x) (NULL==(x= semMCreate(SEM_Q_FIFO)))
 #endif
 
 
@@ -276,8 +269,6 @@ Version 0.96:
 #if USE_ERRLOGPRINTF
 #include <errlog.h> /* epics error printf */    
 #endif
-
-
 
 #include <ctype.h>
 #include <stdlib.h>
