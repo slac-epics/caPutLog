@@ -28,19 +28,6 @@
 /*@EM("/@ This file was automatically generated, all manual changes\n") 
   @EM("   to this file will be lost, edit csm.c instead of csm.h !@/\n\n") */
 
-    /*----------------------------------------------------*/
-    /*  	   RCS-properties of this file            */
-    /*----------------------------------------------------*/
-
-/*@EM("    /@   RCS-properties of the underlying source csmbase.c   @/\n")@IT*/   
-    
-/* Author:              $Author: pfeiffer $
-   check-in date:       $Date: 2006/03/02 10:13:45 $
-   locker of this file: $Locker:  $
-   Revision:            $Revision: 1.24 $
-   State:               $State: Exp $
-*/
-   
     /*@ETI------------------------------------------------*/
     /*			    History                       */
     /*----------------------------------------------------*/
