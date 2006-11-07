@@ -1,0 +1,9 @@
+Compiler call:
+
+gcc test.c module.c -o dbctest [-DNDEBUG] [-DTESTV] [-DTESTI]
+
+Preprocessor symbols:
+
+NDEBUG: precondition checks off
+TESTV:   test for routine that returns void
+TESTI:  test for routine that returns int
