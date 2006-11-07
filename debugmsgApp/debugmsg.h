@@ -52,12 +52,12 @@ extern "C" {
 #include <stdio.h>
 
 #define DBG_EXTERN(prefix)			\
-extern void prefix##SetDebug (char);
+extern void prefix##SetDebug (int);
 
 #ifdef DEBUGMSG
 
 #define DBG_IMPLEMENT(prefix)			\
-void prefix##SetDebug (char verb)		\
+void prefix##SetDebug (int verb)		\
 {						\
    DBG_INIT;					\
    dbg_level = verb;				\
@@ -90,8 +90,8 @@ if (!dbg_int_context) sem_post(dbg_lock)
 
 #define DBG_DECLARE				\
 static sem_t* dbg_lock      = NULL;		\
-static char dbg_level       = -1;		\
-static char dbg_int_context = FALSE;
+static int dbg_level       = -1;		\
+static int dbg_int_context = FALSE;
 
 #define DBG_INIT				\
 if (dbg_lock == NULL) dbg_lock = sem_open("dbg_lock", O_CREAT, 0, 1)
@@ -132,7 +132,7 @@ dbg_int_context = FALSE
 #define DBG_LOG_MUTEX_EXIT
 
 #define DBG_DECLARE				\
-static char dbg_level       = -1;
+static int dbg_level       = -1;
 
 #define DBG_INIT
 #define DBG_ENTER_INT_CONTEXT
@@ -200,7 +200,7 @@ static char dbg_level       = -1;
 #define PRF(verb, x)
 #define DBG_DECLARE
 #define DBG_IMPLEMENT(prefix)					\
-void prefix##SetDebug (char verb)				\
+void prefix##SetDebug (int verb)				\
 {								\
    printf("No debug message support compiled into " #prefix	\
 	  " (use '-DDEBUGMSG' to enable).\n");			\
