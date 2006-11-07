@@ -138,6 +138,8 @@ static int dbg_level       = -1;
 #define DBG_ENTER_INT_CONTEXT
 #define DBG_LEAVE_INT_CONTEXT
 
+#define DBG_REGISTER_CMD(prefix)
+
 #endif /* #ifdef vxWorks else */
 
 
@@ -241,6 +243,29 @@ int return_0(void);
 
 #endif
 
+/*+**************************************************************************
+ *		Command Registration
+ **************************************************************************-*/
+
+#ifdef vxWorks
+#define DBG_REGISTER_CMD(prefix)								\
+static const iocshArg prefix##SetDebugArg0 = { "level", iocshArgInt };				\
+static const iocshArg *const prefix##SetDebugArgs[] = { & prefix##SetDebugArg0 };		\
+static const iocshFuncDef prefix##SetDebugDef = {#prefix "SetDebug",0,prefix##SetDebugArgs};\
+static void prefix##SetDebugCall(const iocshArgBuf *args)					\
+{												\
+    prefix##SetDebug(args[0].ival);								\
+}												\
+static void prefix##SetDebugRegisterCommand(void)						\
+{												\
+    static int firstTime = 1;									\
+    if (firstTime) {										\
+        firstTime = 0;										\
+        iocshRegister(&prefix##SetDebugDef,prefix##SetDebugCall);			\
+    }												\
+}												\
+epicsExportRegistrar(prefix##SetDebugRegisterCommand);
+#endif
 
 #ifdef __cplusplus
 }
