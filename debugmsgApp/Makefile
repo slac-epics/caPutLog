@@ -1,3 +1,8 @@
 TOP=..
-include $(TOP)/config/CONFIG_APP
-include $(EPICS_BASE)/config/RULES_ARCHS
+include $(TOP)/configure/CONFIG
+
+INC = debugmsg.h
+
+include $(TOP)/configure/RULES
+#----------------------------------------
+#  ADD RULES AFTER THIS LINE
