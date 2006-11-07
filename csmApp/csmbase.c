@@ -242,19 +242,7 @@ Version 0.96:
 /*			 Include-Files			      */
 /*____________________________________________________________*/
 
-/* #include <basic.h> */
-
-#ifdef B_VXWORKS
-#include <vxWorks.h>
-#endif
-
-#if USE_PSEM
-#include <psem.h>
-#else
-/* use native vxWorks semaphores */
-#include <semaphore.h>
-#endif
-
+#include <epicsMutex.h>
 
 #if USE_DBG
 #include <dbg.h>     
@@ -361,7 +349,7 @@ typedef enum { CSM_NOTHING,  /*!< kind of NULL value */
 
 /*! \internal \brief compound type for functions */
 struct csm_Function
-  { SEM_TYPE semaphore;   /*!< semaphore to lock access to csm_function */
+  { epicsMutexId semaphore;   /*!< semaphore to lock access to csm_function */
     double   last;        /*!< last value that was calculated */
     csm_bool on_hold;     /*!< when TRUE, just return last */
     csm_func_type type;   /*!< the type of the function */
@@ -918,10 +906,10 @@ double csm_x(csm_function *func, double y)
   { if (func->on_hold)
       return(func->last);
 
-    SEMTAKE(func->semaphore);
+    epicsMutexLock(func->semaphore);
 
     if (func->on_hold)
-      { SEMGIVE(func->semaphore);
+      { epicsMutexUnlock(func->semaphore);
         return(func->last); 
       };
 
@@ -940,7 +928,7 @@ double csm_x(csm_function *func, double y)
 	       func->last=0;
 	       break;
       };
-    SEMGIVE(func->semaphore);	  	       
+    epicsMutexUnlock(func->semaphore);	  	       
     return(func->last);
   }
 
@@ -959,10 +947,10 @@ double csm_y(csm_function *func, double x)
   { if (func->on_hold)
       return(func->last);
 
-    SEMTAKE(func->semaphore);
+    epicsMutexLock(func->semaphore);
 
     if (func->on_hold)
-      { SEMGIVE(func->semaphore);
+      { epicsMutexUnlock(func->semaphore);
         return(func->last); 
       };
 
@@ -981,7 +969,7 @@ double csm_y(csm_function *func, double x)
 	       func->last=0;
 	       break;
       };  
-    SEMGIVE(func->semaphore);	  	       
+    epicsMutexUnlock(func->semaphore);	  	       
     return(func->last);
   }
   
@@ -1001,10 +989,10 @@ double csm_dx(csm_function *func, double y)
   { if (func->on_hold)
       return(func->last);
 
-    SEMTAKE(func->semaphore);
+    epicsMutexLock(func->semaphore);
 
     if (func->on_hold)
-      { SEMGIVE(func->semaphore);
+      { epicsMutexUnlock(func->semaphore);
         return(func->last); 
       };
 
@@ -1013,7 +1001,7 @@ double csm_dx(csm_function *func, double y)
     else
       func->last=0;
       
-    SEMGIVE(func->semaphore);
+    epicsMutexUnlock(func->semaphore);
     return(func->last);
   }
 
@@ -1033,10 +1021,10 @@ double csm_dy(csm_function *func, double x)
   { if (func->on_hold)
       return(func->last);
 
-    SEMTAKE(func->semaphore);
+    epicsMutexLock(func->semaphore);
 
     if (func->on_hold)
-      { SEMGIVE(func->semaphore);
+      { epicsMutexUnlock(func->semaphore);
         return(func->last); 
       };
 
@@ -1045,7 +1033,7 @@ double csm_dy(csm_function *func, double x)
     else
       func->last=0;
       
-    SEMGIVE(func->semaphore);
+    epicsMutexUnlock(func->semaphore);
     return(func->last);
   }
 
@@ -1065,10 +1053,10 @@ double csm_z(csm_function *func, double x, double y)
   { if (func->on_hold)
       return(func->last);
 
-    SEMTAKE(func->semaphore);
+    epicsMutexLock(func->semaphore);
   
     if (func->on_hold)
-      { SEMGIVE(func->semaphore);
+      { epicsMutexUnlock(func->semaphore);
         return(func->last); 
       };
 
@@ -1077,7 +1065,7 @@ double csm_z(csm_function *func, double x, double y)
     else
       func->last=0;
 
-    SEMGIVE(func->semaphore);
+    epicsMutexUnlock(func->semaphore);
     return(func->last);
   }
   
@@ -1161,9 +1149,9 @@ static int strdoublescan(char *st, double *d, int no_of_cols)
 
 /*@EX(1)*/
 void csm_clear(csm_function *func)
-  { SEMTAKE(func->semaphore);
+  { epicsMutexLock(func->semaphore);
     func->on_hold= CSM_TRUE;
-    SEMGIVE(func->semaphore);
+    epicsMutexUnlock(func->semaphore);
 
     reinit_function(func);
   
@@ -1183,7 +1171,7 @@ void csm_clear(csm_function *func)
 /*@EX(1)*/
 void csm_free(csm_function *func)
   { csm_clear(func);
-    SEMDELETE(func->semaphore);
+    epicsMutexDestroy(func->semaphore);
     free(func);
   }
 
@@ -1201,9 +1189,9 @@ void csm_free(csm_function *func)
 /*@EX(1)*/
 void csm_def_linear(csm_function *func, double a, double b)
   /* y= a+b*x */
-  { SEMTAKE(func->semaphore);
+  { epicsMutexLock(func->semaphore);
     func->on_hold= CSM_TRUE;
-    SEMGIVE(func->semaphore);
+    epicsMutexUnlock(func->semaphore);
 
     reinit_function(func);
   
@@ -1231,9 +1219,9 @@ csm_bool csm_def_linear_offset(csm_function *func, double a)
         return(CSM_FALSE);
       };
 
-    SEMTAKE(func->semaphore);
+    epicsMutexLock(func->semaphore);
     func->f.lf.a= a;  
-    SEMGIVE(func->semaphore);
+    epicsMutexUnlock(func->semaphore);
 
     return(CSM_TRUE);
   } 
@@ -1274,9 +1262,9 @@ csm_bool csm_read_1d_table(char *filename, csm_function *func)
         return(CSM_FALSE); 
       };
     
-    SEMTAKE(func->semaphore);
+    epicsMutexLock(func->semaphore);
     func->on_hold= CSM_TRUE;
-    SEMGIVE(func->semaphore);
+    epicsMutexUnlock(func->semaphore);
     
     reinit_function(func);
 
@@ -1411,9 +1399,9 @@ x2  z21  z22  z23 ...
 	return(CSM_FALSE);
       };
       
-    SEMTAKE(func->semaphore);
+    epicsMutexLock(func->semaphore);
     func->on_hold= CSM_TRUE;
-    SEMGIVE(func->semaphore);
+    epicsMutexUnlock(func->semaphore);
     
     reinit_function(func);
     init_2d_functiontable(ft);
@@ -1567,7 +1555,8 @@ csm_function *csm_new_function(void)
     f->type= CSM_NOTHING;
     f->last= 0;
     f->on_hold= CSM_FALSE;
-    if (SEMCREATE(f->semaphore))
+    f->semaphore= epicsMutexCreate();
+    if (f->semaphore==NULL)
       { free(f);
         return(NULL);
       };
