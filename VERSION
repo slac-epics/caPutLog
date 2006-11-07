@@ -1,3 +1,0 @@
-#Enter a version date here, to enable versioning support.
-#Recommended format is YYYY-MM-DD, the module should be tagged R$(VERSION)
-VERSION:=
