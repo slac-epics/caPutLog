@@ -1,2 +1,0 @@
-# caPutLog driver
-LDOBJS += dbrestore.o fGetDateStr.o autoSaveRestoreInitHooks.o save_restore.o
