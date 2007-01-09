@@ -62,7 +62,8 @@ void prefix##SetDebug (int verb)		\
    DBG_INIT;					\
    dbg_level = verb;				\
    return;					\
-}
+}						\
+DBG_REGISTER_CMD(prefix)
 
 #ifdef vxWorks
 				/* VxWorks version: uses semaphores,
@@ -138,8 +139,6 @@ static int dbg_level       = -1;
 #define DBG_ENTER_INT_CONTEXT
 #define DBG_LEAVE_INT_CONTEXT
 
-#define DBG_REGISTER_CMD(prefix)
-
 #endif /* #ifdef vxWorks else */
 
 
@@ -206,7 +205,8 @@ void prefix##SetDebug (int verb)				\
 {								\
    printf("No debug message support compiled into " #prefix	\
 	  " (use '-DDEBUGMSG' to enable).\n");			\
-}
+}								\
+DBG_REGISTER_CMD(prefix)
 #define DBG_INIT
 #define DBG_ENTER_INT_CONTEXT
 #define DBG_LEAVE_INT_CONTEXT
@@ -248,10 +248,12 @@ int return_0(void);
  **************************************************************************-*/
 
 #ifdef vxWorks
+#include <epicsExport.h>
+#include <iocsh.h>
 #define DBG_REGISTER_CMD(prefix)								\
 static const iocshArg prefix##SetDebugArg0 = { "level", iocshArgInt };				\
 static const iocshArg *const prefix##SetDebugArgs[] = { & prefix##SetDebugArg0 };		\
-static const iocshFuncDef prefix##SetDebugDef = {#prefix "SetDebug",0,prefix##SetDebugArgs};\
+static const iocshFuncDef prefix##SetDebugDef = {#prefix "SetDebug",0,prefix##SetDebugArgs};	\
 static void prefix##SetDebugCall(const iocshArgBuf *args)					\
 {												\
     prefix##SetDebug(args[0].ival);								\
@@ -261,11 +263,13 @@ static void prefix##SetDebugRegisterCommand(void)						\
     static int firstTime = 1;									\
     if (firstTime) {										\
         firstTime = 0;										\
-        iocshRegister(&prefix##SetDebugDef,prefix##SetDebugCall);			\
+        iocshRegister(&prefix##SetDebugDef,prefix##SetDebugCall);				\
     }												\
 }												\
 epicsExportRegistrar(prefix##SetDebugRegisterCommand);
-#endif
+#else  /* #ifdef vxWorks */
+#define DBG_REGISTER_CMD(prefix)
+#endif /* #ifdef vxWorks else */
 
 #ifdef __cplusplus
 }
