@@ -456,7 +456,7 @@ static csm_bool alloc_coordinates(csm_coordinates *c, int elements)
                              sizeof(csm_coordinate)*elements);
 			     
     if (c->coordinate==NULL) /* allocation error */
-      { DBG_MSG_PRINTF2("error in IDCP:csm:alloc_coordinates line %d,\n"
+      { DBG_MSG_PRINTF2("error in csm:alloc_coordinates line %d,\n"
                 	"allocation failed!\n", __LINE__);
 	init_coordinates(c);
 	return(CSM_FALSE);
@@ -490,7 +490,7 @@ static csm_bool resize_coordinates(csm_coordinates *c, int elements)
     c->no_of_elements= elements;
     if (NULL== (c->coordinate= realloc(c->coordinate,
                                        sizeof(csm_coordinate)*elements)))
-      { DBG_MSG_PRINTF2("error in IDCP:csm:resize_coordinates line %d,\n" \
+      { DBG_MSG_PRINTF2("error in csm:resize_coordinates line %d,\n" \
                         "realloc failed!\n", __LINE__);
         return(CSM_FALSE);
       };
@@ -527,7 +527,7 @@ static csm_bool init_matrix(double **z, int rows, int columns)
     double *zp;
     
     if (NULL== (zp= malloc((sizeof(double))*rows*columns)))
-      { DBG_MSG_PRINTF2("error in IDCP:csm:init_matrix line %d,\n" \
+      { DBG_MSG_PRINTF2("error in csm:init_matrix line %d,\n" \
                         "malloc failed!\n", __LINE__);
         return(CSM_FALSE);
       };
@@ -605,7 +605,7 @@ static int coordinate_lookup_index(csm_coordinates *coords,double x,
     if (coords->no_of_elements<2)
       { if (coords->no_of_elements<1)
           { 
-            DBG_MSG_PRINTF2("error in IDCP:csm:coordinate_lookup_index %d,\n" \
+            DBG_MSG_PRINTF2("error in csm:coordinate_lookup_index %d,\n" \
                             "table has less than 1 element!\n", __LINE__);
             return(-1);
            };
@@ -1214,7 +1214,7 @@ void csm_def_linear(csm_function *func, double a, double b)
 /*@EX(1)*/
 csm_bool csm_def_linear_offset(csm_function *func, double a)
   { if (func->type!=CSM_LINEAR)
-      { DBG_MSG_PRINTF2("error in IDCP:csm_def_linear_offset line %d,\n" \
+      { DBG_MSG_PRINTF2("error in csm_def_linear_offset line %d,\n" \
                         "not a linear function!\n", __LINE__);
         return(CSM_FALSE);
       };
@@ -1250,7 +1250,7 @@ csm_bool csm_read_1d_table(char *filename, csm_function *func)
     char dummy;
     
     if (NULL==(f=fopen(filename,"r"))) /* vxworks doesn't accept "rt" */
-      { DBG_MSG_PRINTF2("error in IDCP:csm_read_xytable line %d,\n" \
+      { DBG_MSG_PRINTF2("error in csm_read_xytable line %d,\n" \
                         "file open error!\n", __LINE__);
         return(CSM_FALSE);
       };
@@ -1371,7 +1371,7 @@ x2  z21  z22  z23 ...
     int columns,rows;
 
     if (NULL==(f=fopen(filename,"r"))) /* vxworks doesn't accept "rt" */
-      { DBG_MSG_PRINTF2("error in IDCP:csm_read_xytable line %d,\n" \
+      { DBG_MSG_PRINTF2("error in csm_read_xytable line %d,\n" \
                         "file open error!\n", __LINE__);
         return(CSM_FALSE);
       };
