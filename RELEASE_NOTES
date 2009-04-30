@@ -1,7 +1,24 @@
-caPutLog-R3-1:
-New version from BESSY
+#==============================================================
+#
+#  Name: RELEASE_NOTES
+#
+#  Rem:  This file contains the the release notes for
+#        the caPutLog package.
+#
+#  Side:  Package was developped at BESSY
+#
+#  Auth:  dd-mmm-yyyy, Benjamin Franksen  (USERNAME)
+#  Rev:   dd-mmm-yyyy, Reviewer's Name    (USERNAME)
+#--------------------------------------------------------------
+#  Mod:
+#         28-Apr-2009, K. Luchini         (LUCHINI):
+#          release caPutLog-R3-1-lcls1
+#
+#==============================================================
+#
+caPutLog-R3-1-lcls1:  New version from BESSY
 
-Changes since R3-0:
+  Changes since R3-0:
 
   * fixed behavior if field type is not a valid db request type
   * added a web page for distribution and minimal docs
@@ -10,4 +27,5 @@ Changes since R3-0:
   - removed defunct EPICS_CA_PUT_LOG_INET and EPICS_CA_PUT_LOG_PORT and
     replaced by EPICS_CA_PUT_LOG_ADDR (host[:port] notation)
   - environ var gets used if first parameter of caPutLogInit is NULL or empty
+
 
