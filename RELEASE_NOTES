@@ -16,6 +16,9 @@
 #
 #==============================================================
 #
+caPutLog-R3-1-lcls2:  Built against rtems 4.9.3 and EPICS BASE:
+                      base-R3-14-8-2-lcls5
+
 caPutLog-R3-1-lcls1:  New version from BESSY
 
   Changes since R3-0:
