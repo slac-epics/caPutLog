@@ -11,11 +11,16 @@
 #  Rev:   dd-mmm-yyyy, Reviewer's Name    (USERNAME)
 #--------------------------------------------------------------
 #  Mod:
+#         20-Mar-2010, S. Hoobler         (SONYA):
+#          release caPutLog-R3-1-lcls3
 #         28-Apr-2009, K. Luchini         (LUCHINI):
 #          release caPutLog-R3-1-lcls1
 #
 #==============================================================
 #
+caPutLog-R3-1-lcls3:  Built against rtems 4.9.4 and EPICS BASE:
+                      base-R3-14-8-2-lcls6
+
 caPutLog-R3-1-lcls2:  Built against rtems 4.9.3 and EPICS BASE:
                       base-R3-14-8-2-lcls5
 
