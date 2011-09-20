@@ -1,9 +1,14 @@
-#Makefile at top of application tree
+# Makefile for Asyn gtr support
+#
+# Created by norume on Fri Oct 29 13:59:30 2004
+# Based on the Asyn top template
+
 TOP = .
 include $(TOP)/configure/CONFIG
-DIRS := $(DIRS) $(filter-out $(DIRS), configure)
-DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard *App))
-DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard *app))
-DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard iocBoot))
-DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard iocboot))
+
+DIRS := configure
+DIRS += $(wildcard *[Ss]up)
+DIRS += $(wildcard *[Aa]pp)
+DIRS += $(wildcard ioc[Bb]oot)
+
 include $(TOP)/configure/RULES_TOP
