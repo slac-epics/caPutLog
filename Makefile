@@ -2,7 +2,8 @@
 TOP = .
 include $(TOP)/configure/CONFIG
 
-DIRS := configure caPutLogApp docs
+#DIRS := configure caPutLogApp docs
+DIRS := configure caPutLogApp
 
 include $(TOP)/configure/RULES_TOP
 
