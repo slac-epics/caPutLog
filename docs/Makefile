@@ -62,10 +62,6 @@ help:
 	@echo "  linkcheck  to check all external links for integrity"
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 
-realclean clean:
-	-rm -rf $(BUILDDIR)
-	-rm -f caPutLog*.tar.gz
-
 html: tar
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
@@ -165,3 +161,8 @@ doctest:
 	      "results in $(BUILDDIR)/doctest/output.txt."
 
 endif
+
+realclean clean:
+	-rm -rf $(BUILDDIR)
+	-rm -f caPutLog*.tar.gz
+
