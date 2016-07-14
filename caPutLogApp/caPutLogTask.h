@@ -70,6 +70,7 @@ epicsShareFunc int caPutLogTaskStart(int config);
 epicsShareFunc void caPutLogTaskStop(void);
 epicsShareFunc void caPutLogTaskSend(LOGDATA *plogData);
 epicsShareFunc void caPutLogTaskShow(void);
+epicsShareFunc int	VALUE_2_string(char *pbuf, size_t buflen, const VALUE *pval, short type);
 
 #ifdef __cplusplus
 }
