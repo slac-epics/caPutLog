@@ -60,6 +60,7 @@ epicsShareFunc int epicsShareAPI caPutLogFile (const char *file_path)
         fprintf( stderr, "caPutLogFile: Unable to open log file %s\n", file_path );
         return caPutLogError;
 	}
+	return caPutLogSuccess;
 }
 
 /*
