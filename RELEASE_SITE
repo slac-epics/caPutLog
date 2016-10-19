@@ -1,14 +1,7 @@
-# =============================================================
-# Define the top of the EPICS tree for your site.
-# We will build some tools/scripts that allow us to
-# change this easily when relocating software.
-# ==============================================================
--include $(CONFIG_SITE_TOP)/common_dirs.mak
-ifndef EPICS_SITE_TOP
-EPICS_SITE_TOP=/reg/g/pcds/package/epics/3.14
-endif
-EPICS_SITE_TOP:=$(EPICS_SITE_TOP)
-
-# EPICS module releases are kept here
-EPICS_MODULES=$(EPICS_SITE_TOP)/modules
+BASE_MODULE_VERSION     = R3.14.12-0.4.0
+EPICS_SITE_TOP          = /reg/g/pcds/epics
+EPICS_MODULES           = $(EPICS_SITE_TOP)/$(BASE_MODULE_VERSION)/modules
+EPICS_HOST_ARCH         = $(shell $(EPICS_SITE_TOP)/base/$(BASE_MODULE_VERSION)/startup/EpicsHostArch)
+PSPKG_ROOT              = /reg/g/pcds/pkg_mgr
+$(info Setting BASE_MODULE_VERSION=$(BASE_MODULE_VERSION) from $(lastword $(MAKEFILE_LIST)))
 
