@@ -18,6 +18,7 @@ extern "C" {
 #define caPutLogAllNoFilter 2   /* log all puts no filtering on same PV*/
 
 epicsShareFunc int caPutLogInit (const char *addr_str, int config);
+epicsShareFunc int caPutLogFile (const char *file_path);
 epicsShareFunc int caPutLogReconf (int config);
 epicsShareFunc void caPutLogShow (int level);
 epicsShareFunc void caPutLogSetTimeFmt (const char *format);

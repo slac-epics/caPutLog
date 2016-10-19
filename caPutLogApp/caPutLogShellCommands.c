@@ -16,6 +16,16 @@ static void caPutLogInitCall(const iocshArgBuf *args)
     caPutLogInit(args[0].sval, args[1].ival);
 }
 
+static const iocshArg caPutLogFileArg0 = {"filePath", iocshArgString};
+static const iocshArg *const caPutLogFileArgs[] = {
+    &caPutLogFileArg0,
+};
+static const iocshFuncDef caPutLogFileDef = {"caPutLogFile", 1, caPutLogFileArgs};
+static void caPutLogFileCall(const iocshArgBuf *args)
+{
+    caPutLogFile(args[0].sval);
+}
+
 static const iocshArg caPutLogReconfArg0 = {"config", iocshArgInt};
 static const iocshArg *const caPutLogReconfArgs[] = {
     &caPutLogReconfArg0
@@ -53,6 +63,7 @@ static void caPutLogRegister(void)
     if(done) return;
     done = TRUE;
     iocshRegister(&caPutLogInitDef,caPutLogInitCall);
+    iocshRegister(&caPutLogFileDef,caPutLogFileCall);
     iocshRegister(&caPutLogReconfDef,caPutLogReconfCall);
     iocshRegister(&caPutLogShowDef,caPutLogShowCall);
     iocshRegister(&caPutLogSetTimeFmtDef,caPutLogSetTimeFmtCall);

@@ -52,6 +52,29 @@ LOCAL struct clientItem {
 } *caPutLogClients = NULL;
 static epicsMutexId caPutLogClientsMutex;
 
+LOCAL FILE		*	caPutLogFp	= NULL;
+
+epicsShareFunc int epicsShareAPI caPutLogFile (const char *file_path)
+{
+	if ( file_path == NULL || strlen(file_path) == 0 )
+	{
+		if ( caPutLogFp	!= NULL )
+		{
+			fclose( caPutLogFp );
+			caPutLogFp = NULL;
+		}
+		return caPutLogSuccess;
+	}
+
+	caPutLogFp = fopen( file_path, "w+" );
+	if ( caPutLogFp == NULL )
+	{
+        fprintf( stderr, "caPutLogFile: Unable to open log file %s\n", file_path );
+        return caPutLogError;
+	}
+	return caPutLogSuccess;
+}
+
 /*
  *  caPutLogClientFlush ()
  */
@@ -62,6 +85,9 @@ void caPutLogClientFlush ()
     for (c = caPutLogClients; c; c = c->next) {
         logClientFlush (c->caPutLogClient);
     }
+	if ( caPutLogFp != NULL ) {
+		fflush( caPutLogFp );
+	}
     epicsMutexUnlock(caPutLogClientsMutex);
 }
 
@@ -152,6 +178,10 @@ void caPutLogClientSend (const char *message)
     epicsMutexMustLock(caPutLogClientsMutex);
     for (c = caPutLogClients; c; c = c->next) {
         logClientSend (c->caPutLogClient, message);
+    }
+    if (caPutLogFp) {
+		fwrite( message, sizeof(char), strlen(message), caPutLogFp );
+		fflush( caPutLogFp );
     }
     epicsMutexUnlock(caPutLogClientsMutex);
 }
