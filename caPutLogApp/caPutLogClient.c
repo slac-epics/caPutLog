@@ -54,7 +54,7 @@ epicsShareFunc int epicsShareAPI caPutLogFile (const char *file_path)
 		return caPutLogSuccess;
 	}
 
-	caPutLogFp = fopen( file_path, "w+" );
+	caPutLogFp = fopen( file_path, "a" );
 	if ( caPutLogFp == NULL )
 	{
         fprintf( stderr, "caPutLogFile: Unable to open log file %s\n", file_path );
