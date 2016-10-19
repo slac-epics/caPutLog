@@ -1,4 +1,4 @@
-BASE_MODULE_VERSION     = R3.14.12-0.5.0
+BASE_MODULE_VERSION     = R3.14.12-0.4.0
 ifndef EPICS_SITE_TOP
 EPICS_SITE_TOP          = /reg/g/pcds/package/epics/3.14
 endif
