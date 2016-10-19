@@ -29,5 +29,5 @@
 #INSTALL_LOCATION=<fullpathname>
 
 # Fetch EPICS_SITE_TOP and other config paths
--include $(TOP)/../../CONFIG_SITE
+#-include $(TOP)/../../CONFIG_SITE
 

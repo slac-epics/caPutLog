@@ -1,9 +1,9 @@
 # RELEASE
 # Defines location of external products
 -include $(TOP)/RELEASE_SITE
-ifndef BASE_MODULE_VERSION
--include $(TOP)/../../RELEASE_SITE
-endif
+#ifndef BASE_MODULE_VERSION
+#-include $(TOP)/../../RELEASE_SITE
+#endif
 
 # ===============================================================
 # Define the version of modules needed by
