@@ -1,11 +1,24 @@
 TOP = ..
 include $(TOP)/configure/CONFIG
 
-ifeq "$(shell $(PERL) -e '`sphinx-build --version 2>&1`; print $$?')" "-1"
+# bhill 6/19/2014
+# ifeq "$(shell $(PERL) -e '`sphinx-build --version 2>&1`; print $$?')" "-1"
+# Disabled this test as we don't need to rebuild the docs and don't have
+# the same infrastructure as BESSY for the rebuild to fully succeed,
+# even though we do have sphinx-build on some machines.
+# Latest docs are available via the web at
+# http://www-csr.bessy.de/control/SoftDist/caPutLog/
+ifndef ENABLE_SPHINX_BUILD
 
 $(info sphinx-build is not on your path, not building documentation)
 
 all build install:
+
+PROJECT       = caPutLog
+
+realclean clean:
+	-rm -rf $(BUILDDIR)
+	-rm -f $(PROJECT)*.tar.gz
 
 else
 

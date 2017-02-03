@@ -1,0 +1,8 @@
+BASE_MODULE_VERSION     = R3.14.12-0.4.0
+ifndef EPICS_SITE_TOP
+EPICS_SITE_TOP          = /reg/g/pcds/package/epics/3.14
+endif
+EPICS_MODULES           = /reg/g/pcds/epics/$(BASE_MODULE_VERSION)/modules
+EPICS_HOST_ARCH         = $(shell /reg/g/pcds/epics/base/$(BASE_MODULE_VERSION)/startup/EpicsHostArch)
+$(info Setting BASE_MODULE_VERSION=$(BASE_MODULE_VERSION) from $(lastword $(MAKEFILE_LIST)))
+
