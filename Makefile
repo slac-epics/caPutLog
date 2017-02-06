@@ -6,6 +6,7 @@ DIRS := configure caPutLogApp #docs
 
 include $(TOP)/configure/RULES_TOP
 
-upload:
-	darcs push wwwcsr@www-csr.bessy.de:www/control/SoftDist/caPutLog/repo/caPutLog
-	rsync -r html/* wwwcsr@www-csr.bessy.de:www/control/SoftDist/caPutLog
+# Bessy version control targets
+#upload:
+#	darcs push wwwcsr@www-csr.bessy.de:www/control/SoftDist/caPutLog/repo/caPutLog
+#	rsync -r html/* wwwcsr@www-csr.bessy.de:www/control/SoftDist/caPutLog

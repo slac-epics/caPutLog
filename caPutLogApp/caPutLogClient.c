@@ -40,6 +40,29 @@ LOCAL READONLY ENV_PARAM EPICS_CA_PUT_LOG_ADDR = {"EPICS_CA_PUT_LOG_ADDR", ""};
 
 LOCAL logClientId caPutLogClient;
 
+LOCAL FILE		*	caPutLogFp	= NULL;
+
+epicsShareFunc int epicsShareAPI caPutLogFile (const char *file_path)
+{
+	if ( file_path == NULL || strlen(file_path) == 0 )
+	{
+		if ( caPutLogFp	!= NULL )
+		{
+			fclose( caPutLogFp );
+			caPutLogFp = NULL;
+		}
+		return caPutLogSuccess;
+	}
+
+	caPutLogFp = fopen( file_path, "a" );
+	if ( caPutLogFp == NULL )
+	{
+        fprintf( stderr, "caPutLogFile: Unable to open log file %s\n", file_path );
+        return caPutLogError;
+	}
+	return caPutLogSuccess;
+}
+
 /*
  *  caPutLogClientFlush ()
  */
@@ -48,6 +71,9 @@ void epicsShareAPI epicsShareAPI caPutLogClientFlush ()
     if (caPutLogClient!=NULL) {
         logClientFlush (caPutLogClient);
     }
+	if ( caPutLogFp != NULL ) {
+		fflush( caPutLogFp );
+	}
 }
 
 /*
@@ -100,5 +126,9 @@ void epicsShareAPI caPutLogClientSend (const char *message)
 {
     if (caPutLogClient) {
         logClientSend (caPutLogClient, message);
+    }
+    if (caPutLogFp) {
+		fwrite( message, sizeof(char), strlen(message), caPutLogFp );
+		fflush( caPutLogFp );
     }
 }
