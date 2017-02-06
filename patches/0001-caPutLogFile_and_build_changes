@@ -1,0 +1,402 @@
+diff --git a/Makefile b/Makefile
+index adae9f7..9966040 100644
+--- a/Makefile
++++ b/Makefile
+@@ -6,6 +6,7 @@ DIRS := configure caPutLogApp #docs
+ 
+ include $(TOP)/configure/RULES_TOP
+ 
+-upload:
+-	darcs push wwwcsr@www-csr.bessy.de:www/control/SoftDist/caPutLog/repo/caPutLog
+-	rsync -r html/* wwwcsr@www-csr.bessy.de:www/control/SoftDist/caPutLog
++# Bessy version control targets
++#upload:
++#	darcs push wwwcsr@www-csr.bessy.de:www/control/SoftDist/caPutLog/repo/caPutLog
++#	rsync -r html/* wwwcsr@www-csr.bessy.de:www/control/SoftDist/caPutLog
+diff --git a/README b/README
+new file mode 100644
+index 0000000..fe95459
+--- /dev/null
++++ b/README
+@@ -0,0 +1,103 @@
++Imported for SLAC National Accelerator Lab ICD.
++
++Revision History:
++-----------------
++Intial Import: Shantha Condamoor on 20-Sept-2011 
++
++The initial import of the EPICS caPutLog module was obtained from 
++Ben Franksen (HZB)'s release caPutLog-3.3 from the following website:
++
++http://www-csr.bessy.de/control/SoftDist/caPutLog/
++
++caPutLog-3.3 is built against EPICS base 3.14.12
++
++---------------------------------------------------------------
++
++Instructions to build and use caPutLog in your ioc application 
++(condensed from Ben Franksen'S website above):
++---------------------------------------------------------------
++
++To Build:
++---------
++1.	In your ioc application 'src' directory's Makefile, add caPutLog.dbd 
++	to your dbd includes and caPutLog to the libraries to link.
++	
++To Configure:
++-------------
++2.	In your IOC startup file add the command:
++
++	caPutLogInit "host[:port]" [config]
++		
++ 	where;
++	host (mandatory argument) is the IP address or host name of the log server and 
++	port is optional (the default is 7011).
++	
++	The environment variable EPICS_CA_PUT_LOG_ADDR is used if the first parameter 
++	to caPutLogInit is NULL or the empty string.
++
++	The second (optional, default=0) argument should be one of
++
++	#define caPutLogNone        -1  /* no logging (disable) */
++	#define caPutLogOnChange    0   /* log only on value change */
++	#define caPutLogAll         1   /* log all puts */
++	#define caPutLogAllNoFilter 2   /* log all puts no filtering on same PV*/
++
++	Make sure access security is enabled on the IOC by providing a 
++	suitable configuration file and load it with a call to asSetFilename(<filename>) 
++	before iocInit. Your configuration file should contain a TRAPWRITE rule. 
++	
++	The following snippet can be used to enable read/write access and 
++	write trapping for everyone (i.e. unrestricted access):
++
++	ASG(DEFAULT) {
++   		RULE(1,READ)
++   	RULE(1,WRITE,TRAPWRITE)
++	}
++	
++	Note that caPutLogInit expects access security to be already running, 
++	so must be called after iocInit.
++
++3. Other shell commands are:
++
++	caPutLogReconf config
++	
++		(a) Change configuration on-line. The argument is the same as in caPutLogInit.
++		
++	caPutLogShow level
++
++		(b) Show information about a running caPutLog, level is the usual interest level (0, 1, or 2).
++		
++Log Server:
++------------		
++For the server you can use the same executable as for the regular IOC log server.
++You might want to start another instance with a different port, though.
++However, you can also use the same log server instance (so that caput log messages 
++and regular IOC log messages go into the same log file).
++
++Log Format:
++-----------
++The iocLogServer precedes each line with these data:
++
++<host:port of log client> <date and time of log message reception>
++
++After this comes the actual log message, which has this format:
++
++<date> <time> <host> <user> <change>
++
++	where <date> and <time> refer to the time of the caput request, 
++	<host> and <user> identify the agent that requested the caput, 
++	and <change> is one of
++
++new=<value> old=<value>
++
++or
++
++new=<value> old=<value> min=<value> max=<value>
++
++The latter format means that several puts for the same PV have been received in rapid succession; 
++in this case only the original and the final value as well as the minimum and maximum value are logged. 
++This filtering can be disabled by specifying the caPutLogAllNoFilter configuration option.
++
++
++
++
+diff --git a/caPutLogApp/caPutLog.h b/caPutLogApp/caPutLog.h
+index 7eff65e..e2cd484 100644
+--- a/caPutLogApp/caPutLog.h
++++ b/caPutLogApp/caPutLog.h
+@@ -18,6 +18,7 @@ extern "C" {
+ #define caPutLogAllNoFilter 2   /* log all puts no filtering on same PV*/
+ 
+ epicsShareFunc int epicsShareAPI caPutLogInit (const char *addr_str, int config);
++epicsShareFunc int epicsShareAPI caPutLogFile (const char *file_path);
+ epicsShareFunc int epicsShareAPI caPutLogReconf (int config);
+ epicsShareFunc void epicsShareAPI caPutLogShow (int level);
+ 
+diff --git a/caPutLogApp/caPutLogClient.c b/caPutLogApp/caPutLogClient.c
+index dcc3344..d9cad69 100644
+--- a/caPutLogApp/caPutLogClient.c
++++ b/caPutLogApp/caPutLogClient.c
+@@ -40,6 +40,29 @@ LOCAL READONLY ENV_PARAM EPICS_CA_PUT_LOG_ADDR = {"EPICS_CA_PUT_LOG_ADDR", ""};
+ 
+ LOCAL logClientId caPutLogClient;
+ 
++LOCAL FILE		*	caPutLogFp	= NULL;
++
++epicsShareFunc int epicsShareAPI caPutLogFile (const char *file_path)
++{
++	if ( file_path == NULL || strlen(file_path) == 0 )
++	{
++		if ( caPutLogFp	!= NULL )
++		{
++			fclose( caPutLogFp );
++			caPutLogFp = NULL;
++		}
++		return caPutLogSuccess;
++	}
++
++	caPutLogFp = fopen( file_path, "a" );
++	if ( caPutLogFp == NULL )
++	{
++        fprintf( stderr, "caPutLogFile: Unable to open log file %s\n", file_path );
++        return caPutLogError;
++	}
++	return caPutLogSuccess;
++}
++
+ /*
+  *  caPutLogClientFlush ()
+  */
+@@ -48,6 +71,9 @@ void epicsShareAPI epicsShareAPI caPutLogClientFlush ()
+     if (caPutLogClient!=NULL) {
+         logClientFlush (caPutLogClient);
+     }
++	if ( caPutLogFp != NULL ) {
++		fflush( caPutLogFp );
++	}
+ }
+ 
+ /*
+@@ -101,4 +127,8 @@ void epicsShareAPI caPutLogClientSend (const char *message)
+     if (caPutLogClient) {
+         logClientSend (caPutLogClient, message);
+     }
++    if (caPutLogFp) {
++		fwrite( message, sizeof(char), strlen(message), caPutLogFp );
++		fflush( caPutLogFp );
++    }
+ }
+diff --git a/caPutLogApp/caPutLogShellCommands.c b/caPutLogApp/caPutLogShellCommands.c
+index f1098e0..ec83509 100644
+--- a/caPutLogApp/caPutLogShellCommands.c
++++ b/caPutLogApp/caPutLogShellCommands.c
+@@ -16,6 +16,16 @@ static void caPutLogInitCall(const iocshArgBuf *args)
+     caPutLogInit(args[0].sval, args[1].ival);
+ }
+ 
++static const iocshArg caPutLogFileArg0 = {"filePath", iocshArgString};
++static const iocshArg *const caPutLogFileArgs[] = {
++    &caPutLogFileArg0,
++};
++static const iocshFuncDef caPutLogFileDef = {"caPutLogFile", 1, caPutLogFileArgs};
++static void caPutLogFileCall(const iocshArgBuf *args)
++{
++    caPutLogFile(args[0].sval);
++}
++
+ static const iocshArg caPutLogReconfArg0 = {"config", iocshArgInt};
+ static const iocshArg *const caPutLogReconfArgs[] = {
+     &caPutLogReconfArg0
+@@ -43,6 +53,7 @@ static void caPutLogRegister(void)
+     if(done) return;
+     done = TRUE;
+     iocshRegister(&caPutLogInitDef,caPutLogInitCall);
++    iocshRegister(&caPutLogFileDef,caPutLogFileCall);
+     iocshRegister(&caPutLogReconfDef,caPutLogReconfCall);
+     iocshRegister(&caPutLogShowDef,caPutLogShowCall);
+ }
+diff --git a/caPutLogApp/caPutLogTask.c b/caPutLogApp/caPutLogTask.c
+index 83bea2a..fe7fd90 100644
+--- a/caPutLogApp/caPutLogTask.c
++++ b/caPutLogApp/caPutLogTask.c
+@@ -85,7 +85,6 @@
+ static void caPutLogTask(void *arg);
+ static void log_msg(const VALUE *pold_value, const LOGDATA *pLogData,
+     int burst, const VALUE *pmin, const VALUE *pmax, int config);
+-static int  val_to_string(char *pbuf, size_t buflen, const VALUE *pval, short type);
+ static void val_min(VALUE *pres, const VALUE *pa, const VALUE *pb, short type);
+ static void val_max(VALUE *pres, const VALUE *pa, const VALUE *pb, short type);
+ static int  val_equal(const VALUE *pa, const VALUE *pb, short type);
+@@ -153,7 +152,7 @@ int caPutLogTaskStart(int config)
+     shut_down = FALSE;
+     threadId = epicsThreadCreate("caPutLog", epicsThreadPriorityLow,
+         epicsThreadGetStackSize(epicsThreadStackSmall),
+-        caPutLogTask, (void*)config);
++        caPutLogTask, (void *)(long) config );
+     if (!threadId) {
+         errlogSevPrintf(errlogFatal,"caPutLog: thread creation failed\n");
+         return caPutLogError;
+@@ -179,7 +178,7 @@ void caPutLogTaskSend(LOGDATA *plogData)
+ static void caPutLogTask(void *arg)
+ {
+     int sent = FALSE, burst = FALSE;
+-    int config = (int)arg;
++    int config = (long) arg;
+     LOGDATA *pcurrent, *pnext;
+     VALUE old_value, max_value, min_value;
+     VALUE *pold=&old_value, *pmax=&max_value, *pmin=&min_value;
+@@ -328,7 +327,7 @@ static void log_msg(const VALUE *pold_value, const LOGDATA *pLogData,
+     if (len >= space) { do_log(msg, space-1, YES); return; }
+ 
+     /* new value */
+-    len += val_to_string(msg+len, space-len,
++    len += VALUE_to_string(msg+len, space-len,
+         &pLogData->new_value.value, pLogData->type);
+     if (len >= space) { do_log(msg, space-1, YES); return; }
+ 
+@@ -336,20 +335,20 @@ static void log_msg(const VALUE *pold_value, const LOGDATA *pLogData,
+     if (len >= space) { do_log(msg, space-1, YES); return; }
+ 
+     /* old value */
+-    len += val_to_string(msg+len, space-len, pold_value, pLogData->type);
++    len += VALUE_to_string(msg+len, space-len, pold_value, pLogData->type);
+     if (len >= space) { do_log(msg, space-1, YES); return; }
+ 
+     if (burst && isDbrNumeric(pLogData->type)) {
+         /* min value */
+         len += epicsSnprintf(msg+len, space-len, " min=");
+         if (len >= space) { do_log(msg, space-1, YES); return; }
+-        len += val_to_string(msg+len, space-len, pmin, pLogData->type);
++        len += VALUE_to_string(msg+len, space-len, pmin, pLogData->type);
+         if (len >= space) { do_log(msg, space-1, YES); return; }
+ 
+         /* max value */
+         len += epicsSnprintf(msg+len, space-len, " max=");
+         if (len >= space) { do_log(msg, space-1, YES); return; }
+-        len += val_to_string(msg+len, space-len, pmax, pLogData->type);
++        len += VALUE_to_string(msg+len, space-len, pmax, pLogData->type);
+         if (len >= space) { do_log(msg, space-1, YES); return; }
+     }
+     do_log(msg, len, NO);
+@@ -514,9 +513,9 @@ static void val_assign(VALUE *dst, const VALUE *src, short type)
+ }
+ 
+ /*
+- * val_to_string(): convert VALUE to string
++ * VALUE_to_string(): convert VALUE to string
+  */
+-static int val_to_string(char *pbuf, size_t buflen, const VALUE *pval, short type)
++int VALUE_to_string(char *pbuf, size_t buflen, const VALUE *pval, short type)
+ {
+     switch (type) {
+     case DBR_CHAR:
+@@ -557,8 +556,8 @@ static void val_dump(LOGDATA *pdata)
+         strcpy(oldbuf,"(conv fail)");
+         strcpy(newbuf,"(conv fail)");
+         strcpy(timebuf,"(strftime fail)");
+-        val_to_string(oldbuf,sizeof(oldbuf),&pdata->old_value,pdata->type);
+-        val_to_string(newbuf,sizeof(newbuf),&pdata->new_value.value,pdata->type);
++        VALUE_to_string(oldbuf,sizeof(oldbuf),&pdata->old_value,pdata->type);
++        VALUE_to_string(newbuf,sizeof(newbuf),&pdata->new_value.value,pdata->type);
+         epicsTimeToStrftime(timebuf,sizeof(timebuf),"%Y-%m-%dT%H:%M:%S",&pdata->new_value.time);
+         printf("userid = %s\n", pdata->userid);
+         printf("hostid = %s\n", pdata->hostid);
+diff --git a/caPutLogApp/caPutLogTask.h b/caPutLogApp/caPutLogTask.h
+index 9a3f8f4..d9e947d 100644
+--- a/caPutLogApp/caPutLogTask.h
++++ b/caPutLogApp/caPutLogTask.h
+@@ -44,6 +44,7 @@ typedef struct {
+ epicsShareFunc int epicsShareAPI caPutLogTaskStart(int config);
+ epicsShareFunc void epicsShareAPI caPutLogTaskStop(void);
+ epicsShareFunc void epicsShareAPI caPutLogTaskSend(LOGDATA *plogData);
++epicsShareFunc int	VALUE_to_string(char *pbuf, size_t buflen, const VALUE *pval, short type);
+ 
+ #ifdef __cplusplus
+ }
+diff --git a/configure/CONFIG_SITE b/configure/CONFIG_SITE
+new file mode 100644
+index 0000000..492dfc3
+--- /dev/null
++++ b/configure/CONFIG_SITE
+@@ -0,0 +1,33 @@
++# CONFIG_SITE
++
++# Make any application-specific changes to the EPICS build
++# configuration variables in this file.
++#
++# Host/target specific settings can be specified in files named
++#  CONFIG_SITE.$(EPICS_HOST_ARCH).Common
++#  CONFIG_SITE.Common.$(T_A)
++#  CONFIG_SITE.$(EPICS_HOST_ARCH).$(T_A)
++
++# Set this when you only want to compile this application
++# for a subset of the cross-compiled target architectures
++# that Base is built for.
++# CROSS_COMPILER_TARGET_ARCHS = RTEMS-beatnik linux-x86 linux-x86_64
++
++# If you do NOT want to build for the host architecture,
++# clear BUILD_FOR_HOST_ARCH
++# BUILD_FOR_HOST_ARCH = 
++
++# Set this when your IOC and the host use different paths
++# to access the application. This will be needed to boot
++# from a Microsoft FTP server or with some NFS mounts.
++# You must rebuild in the iocBoot directory for this to
++# take effect.
++#IOCS_APPL_TOP = <path to application top as seen by IOC>
++
++# If you don't want to install into $(TOP) then
++# define INSTALL_LOCATION here
++#INSTALL_LOCATION=<fullpathname>
++
++# Fetch EPICS_SITE_TOP and other config paths
++#-include $(TOP)/../../CONFIG_SITE
++
+diff --git a/configure/RULES.archive b/configure/RULES.archive
+new file mode 100644
+index 0000000..a8efb44
+--- /dev/null
++++ b/configure/RULES.archive
+@@ -0,0 +1,2 @@
++# RULES.archive
++include $(EPICS_BASE)/configure/RULES.archive
+diff --git a/configure/RULES.autosave b/configure/RULES.autosave
+new file mode 100644
+index 0000000..c3b5cb0
+--- /dev/null
++++ b/configure/RULES.autosave
+@@ -0,0 +1,2 @@
++# RULES.autosave
++include $(EPICS_BASE)/configure/RULES.autosave
+diff --git a/docs/Makefile b/docs/Makefile
+index 35054e2..cddc8bd 100644
+--- a/docs/Makefile
++++ b/docs/Makefile
+@@ -1,12 +1,25 @@
+ TOP = ..
+ include $(TOP)/configure/CONFIG
+ 
+-ifeq "$(shell $(PERL) -e '`sphinx-build --version 2>&1`; print $$?')" "-1"
++# bhill 6/19/2014
++# ifeq "$(shell $(PERL) -e '`sphinx-build --version 2>&1`; print $$?')" "-1"
++# Disabled this test as we don't need to rebuild the docs and don't have
++# the same infrastructure as BESSY for the rebuild to fully succeed,
++# even though we do have sphinx-build on some machines.
++# Latest docs are available via the web at
++# http://www-csr.bessy.de/control/SoftDist/caPutLog/
++ifndef ENABLE_SPHINX_BUILD
+ 
+ $(info sphinx-build is not on your path, not building documentation)
+ 
+ all build install:
+ 
++PROJECT       = caPutLog
++
++realclean clean:
++	-rm -rf $(BUILDDIR)
++	-rm -f $(PROJECT)*.tar.gz
++
+ else
+ 
+ # You can set these variables from the command line.

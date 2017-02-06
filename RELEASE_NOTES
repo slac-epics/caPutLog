@@ -1,2 +1,6 @@
+R3.5-1.0.0  06-Feb-2017, H. Slepicka (slepicka)
+    Applied patch <>/patches/0001-caPutLogFile_and_build_changes
+        Add caPutLogFile and tweaks configuration files.
+
 R3.5-0.1.0  03-Feb-2017, H. Slepicka (slepicka)
     First version of caPutLog working with the new Git Workflow.
