@@ -326,7 +326,7 @@ static void log_msg(const VALUE *pold_value, const LOGDATA *pLogData,
     if (len >= space) { do_log(msg, space-1, YES); return; }
 
     /* new value */
-    len += VALUE_to_string(msg+len, space-len,
+    len += VALUE_2_string(msg+len, space-len,
         &pLogData->new_value.value, pLogData->type);
     if (len >= space) { do_log(msg, space-1, YES); return; }
 
@@ -334,20 +334,20 @@ static void log_msg(const VALUE *pold_value, const LOGDATA *pLogData,
     if (len >= space) { do_log(msg, space-1, YES); return; }
 
     /* old value */
-    len += VALUE_to_string(msg+len, space-len, pold_value, pLogData->type);
+    len += VALUE_2_string(msg+len, space-len, pold_value, pLogData->type);
     if (len >= space) { do_log(msg, space-1, YES); return; }
 
     if (burst && isDbrNumeric(pLogData->type)) {
         /* min value */
         len += epicsSnprintf(msg+len, space-len, " min=");
         if (len >= space) { do_log(msg, space-1, YES); return; }
-        len += VALUE_to_string(msg+len, space-len, pmin, pLogData->type);
+        len += VALUE_2_string(msg+len, space-len, pmin, pLogData->type);
         if (len >= space) { do_log(msg, space-1, YES); return; }
 
         /* max value */
         len += epicsSnprintf(msg+len, space-len, " max=");
         if (len >= space) { do_log(msg, space-1, YES); return; }
-        len += VALUE_to_string(msg+len, space-len, pmax, pLogData->type);
+        len += VALUE_2_string(msg+len, space-len, pmax, pLogData->type);
         if (len >= space) { do_log(msg, space-1, YES); return; }
     }
     do_log(msg, len, NO);
@@ -512,9 +512,9 @@ static void val_assign(VALUE *dst, const VALUE *src, short type)
 }
 
 /*
- * VALUE_to_string(): convert VALUE to string
+ * VALUE_2_string(): convert VALUE to string
  */
-int VALUE_to_string(char *pbuf, size_t buflen, const VALUE *pval, short type)
+int VALUE_2_string(char *pbuf, size_t buflen, const VALUE *pval, short type)
 {
     switch (type) {
     case DBR_CHAR:
@@ -561,8 +561,8 @@ static void val_dump(LOGDATA *pdata)
         strcpy(oldbuf,"(conv fail)");
         strcpy(newbuf,"(conv fail)");
         strcpy(timebuf,"(strftime fail)");
-        VALUE_to_string(oldbuf,sizeof(oldbuf),&pdata->old_value,pdata->type);
-        VALUE_to_string(newbuf,sizeof(newbuf),&pdata->new_value.value,pdata->type);
+        VALUE_2_string(oldbuf,sizeof(oldbuf),&pdata->old_value,pdata->type);
+        VALUE_2_string(newbuf,sizeof(newbuf),&pdata->new_value.value,pdata->type);
         epicsTimeToStrftime(timebuf,sizeof(timebuf),"%Y-%m-%dT%H:%M:%S",&pdata->new_value.time);
         printf("userid = %s\n", pdata->userid);
         printf("hostid = %s\n", pdata->hostid);
