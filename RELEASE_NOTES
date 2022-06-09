@@ -1,2 +1,29 @@
+R4.0-1.0.0	2022-06-08 Bruce Hill
+	R4.0 from EPICS Collab
+		Support for new JSON log format
+		Support for multiple host:port log clients
+	plus:
+		Includes a VALUE_2_string function to aid in formatting values in put log.
+		Added caPutLogFile iocsh command to support writing the putlog to a file.
+
+R3.7-1.1.0	2022-06-08 Bruce Hill
+	Changed VALUE_to_string to VALUE_2_string to avoid conflicts w/ similar function in CA gateway.
+
+R3.7-1.0.0	2020-04-08	Bruce Hill
+	SLAC changes for IOC and gateway support:
+		Added caPutLogFile iocsh command
+		Add VALUE_to_string() to the API.
+	R3.7 Fixes:	Andrew Johnson
+		Fix memory leak for log messages that can't be queued
+		More int64 support, in val_to_string()
+		Register an epicsAtExit() routine for shutdown
+		Increase log message line length
+	R3.6 Fixes: Dirk Zimoch
+		Remove 64 bit warnings
+
+R3.5-1.0.0  06-Feb-2017, H. Slepicka (slepicka)
+    Applied patch <>/patches/0001-caPutLogFile_and_build_changes
+        Add caPutLogFile and tweaks configuration files.
+
 R3.5-0.1.0  03-Feb-2017, H. Slepicka (slepicka)
     First version of caPutLog working with the new Git Workflow.
