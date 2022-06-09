@@ -1,3 +1,6 @@
+R3.7-1.1.0	2022-06-08 Bruce Hill
+	Changed VALUE_to_string to VALUE_2_string to avoid conflicts w/ similar function in CA gateway.
+
 R3.7-1.0.0	2020-04-08	Bruce Hill
 	SLAC changes for IOC and gateway support:
 		Added caPutLogFile iocsh command
