@@ -22,6 +22,7 @@ epicsShareFunc int caPutLogFile (const char *file_path);
 epicsShareFunc int caPutLogReconf (int config);
 epicsShareFunc void caPutLogShow (int level);
 epicsShareFunc void caPutLogSetTimeFmt (const char *format);
+epicsShareFunc int caPutLogWasInit(void);
 
 #ifdef __cplusplus
 }

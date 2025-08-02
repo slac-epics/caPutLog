@@ -37,6 +37,13 @@
 #define LOCAL static
 #endif
 
+int caPutLogInitialized = 0;
+
+int caPutLogWasInit()
+{
+    return caPutLogInitialized != 0;
+}
+
 /*
  *  caPutLogShow ()
  */
@@ -105,6 +112,8 @@ int caPutLogInit (const char *addr_str, int config)
     if (status) {
         return caPutLogError;
     }
+
+    caPutLogInitialized = 1;
 
     epicsAtExit(caPutLogExitProc, NULL);
 
